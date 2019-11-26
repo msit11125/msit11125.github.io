@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <title>PathFinding Game</title>
+    
+    <link rel=stylesheet type="text/css" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel=stylesheet type="text/css" href="./src/main.css">
+  </head>
+  <body>
+    <div id="Stats-output"></div>
+    <div id="container">
+      <h3 class="gameText display-2 text-white">
+
+      </h3>
+      <div class="plays">
+          <button id="startGame" class="btn btn-dark">目標導航</button>
+          <button id="random" class="btn btn-info">隨機</button>
+
+          <button id="resetGame" class="btn btn-light mt-5">重設</button>
+
+          
+          
+      </div>
+      
+      <div id="labels"></div>
+
+      <div id="overlay">
+        <div class="spinner"></div>
+        <br/>
+        <h1>載入中...</h1>
+      </div>
+    </div>
+
+      
+    <script type="text/javascript" src="./node_modules/three/build/three.js"></script>
+    <script type="text/javascript" src="./node_modules/three/examples/js/controls/OrbitControls.js"></script>
+    <script type="text/javascript" src="./node_modules/stats-js/build/stats.js"></script>
+    <script type="text/javascript" src="./node_modules/dat.gui/build/dat.gui.js"></script>
+    <script type="text/javascript" src="./node_modules/jquery/dist/jquery.min.js"></script>
+
+    <script type="text/javascript" src="./node_modules/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="./node_modules/@tweenjs/tween.js/dist/tween.umd.js"></script>
+    
+    <script type="text/javascript" src="./src/pathfinding-browser.min.js"></script>
+
+    <script src="./src/index.js"></script>
+  </body>
+</html>
