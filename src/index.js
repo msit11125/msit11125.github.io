@@ -19,7 +19,7 @@ var stats;
 
 
 const boxSize = 50;
-var groundSize = localStorage.getItem("groundSize") ? parseInt(localStorage.getItem("groundSize")) : 1000;
+var groundSize = localStorage.getItem("groundSize") ? parseInt(localStorage.getItem("groundSize")) : 500;
 
 var bound = groundSize / 2 - boxSize / 2;
 
@@ -131,7 +131,7 @@ function init() {
     addSkyBox();
 
     // 物件座標
-    startPos = makeInstance(cubeGeo, 0x0ff74c, 0, '物件');
+    startPos = makeInstance(cubeGeo, 0xFFE364, 0, '玩家', true);
     startPos.cube.position.copy(startCubPos_default);
     startPos.cube.castShadow = true;
     cubes.push(startPos);
@@ -139,17 +139,17 @@ function init() {
     scene.add(startPos.cube);
 
     // 目標座標
-    endPos = makeInstance(cubeGeo, 0x00f7fc, 0, '目標');
+    endPos = makeInstance(cubeGeo, 0x00f7fc, 0, '目標', false);
     endPos.cube.position.copy(endCubePos_default);
     cubes.push(endPos);
     objects.push(endPos.cube);
     scene.add(endPos.cube);
 
     // lights
-    pointlight_startPos = new THREE.PointLight(0x0ff74c, 10, 100);
+    pointlight_startPos = new THREE.PointLight(0xFFE364, 2, 140);
     pointlight_startPos.position.y = pointlight_startPos.position.y;
 
-    pointlight_endPos = new THREE.PointLight(0x00f7fc, 10, 100);     
+    pointlight_endPos = new THREE.PointLight(0x00f7fc, 2, 140);
     pointlight_endPos.position.y = pointlight_endPos.position.y;
 
     scene.add(pointlight_startPos);
@@ -183,12 +183,12 @@ function init() {
     // gui control panel
     controls = new function () {
         this.openOrbitControls = false;
-        this.randBlockCount = 50;
+        this.randBlockCount = 30;
         this.groundSize = groundSize;
     };
 
     var gui = new dat.GUI();
-    var groundResize = gui.add(controls, 'groundSize', 500, 3000, 100).name('地圖大小');
+    var groundResize = gui.add(controls, 'groundSize', 250, 3000, 100).name('地圖大小');
     gui.add(controls, 'randBlockCount', 1, 1500, 10).name('阻礙物數量');
     gui.add(controls, 'openOrbitControls').name('移動攝影機');
 
@@ -282,7 +282,7 @@ function render() {
 
     TWEEN.update();
     pointlight_startPos.position.copy(startPos.cube.position);
-    pointlight_endPos.position.copy( endPos.cube.position);
+    pointlight_endPos.position.copy(endPos.cube.position);
 
     // 更新 startPoint以及endPoint
     cubes.forEach((cubeInfo, ndx) => {
@@ -473,7 +473,7 @@ $("#random").click(function (e) {
 
     function goBlockRandom() {
         let randBlockCount = controls.randBlockCount;
-        
+
         for (var i = 0; i < randBlockCount; i++) {
             // 增加障礙物
             let voxel = new THREE.Mesh(cubeGeo, cubeMaterial);
@@ -509,14 +509,43 @@ $("#random").click(function (e) {
 
 
 
-function makeInstance(geometry, color, x, name) {
+function makeInstance(geometry, color, x, name, hasFace = false) {
     const labelContainerElem = document.querySelector('#labels');
 
-    const material = new THREE.MeshPhongMaterial({
-        color
-    });
+    const texture = new THREE.TextureLoader().load(
+        "/assets/texture/face.png"
+    );
 
-    const cube = new THREE.Mesh(geometry, material);
+    var materials;
+
+    if (hasFace) {
+        materials = [
+            new THREE.MeshLambertMaterial({
+                color: color
+            }),
+            new THREE.MeshLambertMaterial({
+                color: color
+            }),
+            new THREE.MeshLambertMaterial({
+                map: texture
+            }),
+            new THREE.MeshLambertMaterial({
+                color: color
+            }),
+            new THREE.MeshLambertMaterial({
+                color: color
+            }),
+            new THREE.MeshLambertMaterial({
+                color: color
+            })
+        ];
+    } else {
+        materials = new THREE.MeshLambertMaterial({
+            color: color
+        });
+    }
+
+    const cube = new THREE.Mesh(geometry, materials);
     scene.add(cube);
 
     cube.position.x = x;
@@ -580,24 +609,67 @@ function gameState(state) {
             gameText.show();
             return;
         }
-        let coords = startPos.cube.position;
+
+        let coords = startPos.cube.position; // init vector3
+
         path.forEach((element, idx) => {
-            // 移動
+            // 上個位置
+            let vectorA = coords;
+
+            // 間隔動畫
             isSetTimouts.push(
                 setTimeout(function () {
+                    // -- 移動改變 --
                     let tween = new TWEEN.Tween(coords)
                         .to({
                             x: element[0] * boxSize - bound,
                             z: element[1] * boxSize - bound
-                        }, 200)
+                        }, 500)
                         .easing(TWEEN.Easing.Quadratic.Out)
                         .onUpdate(() => {
-                            startPos.cube.position.x = coords.x;
-                            startPos.cube.position.y = coords.y;
-                            startPos.cube.position.z = coords.z;
+
                         }).start();
-                }, 200 * idx)
-            )
+
+                    // -- 面對方向改變 --
+
+                    // 新的位置
+                    var vectorB = coords;
+                    vectorA = vectorB;
+
+                    var p1 = {
+                        x: vectorA.x,
+                        z: vectorA.z
+                    };
+
+                    var p2 = {
+                        x: element[0] * boxSize - bound,
+                        z: element[1] * boxSize - bound
+                    }
+
+                    var angleRadians = caculateVectorRotation(p1, p2);
+
+                    startPos.cube.rotation.y = -angleRadians;
+
+                    // 走過的路徑
+                    const texture = new THREE.TextureLoader().load(
+                        "/assets/texture/yellow.jpg"
+                    );
+                    var pathPointGeo = new THREE.ConeGeometry( 12, 10, 10 );
+                    var pathPointMesh = new THREE.Mesh(
+                        pathPointGeo,
+                        new THREE.MeshBasicMaterial({
+                            map:texture,
+                            side: THREE.DoubleSide
+                        }),
+                    );
+                    pathPointMesh.position.set(vectorA.x, 5 , vectorA.z);
+                    
+                    scene.add(pathPointMesh);
+                    objects.push(pathPointMesh)
+                }, 500 * idx)
+            );
+
+
         });
 
         gameText.hide();
@@ -637,6 +709,8 @@ function gameState(state) {
         startPos.cube.position.copy(startCubPos_default);
         endPos.cube.position.copy(endCubePos_default);
 
+        startPos.cube.rotation.y = 0;
+
         isGameStart = false;
     }
 
@@ -651,6 +725,20 @@ function gameState(state) {
         isGameOver = true;
     }
 
+}
+
+/**
+ * 平面兩點求角度
+ * @param {*} p1 
+ * @param {*} p2 
+ */
+function caculateVectorRotation(p1, p2) {
+    // angle in radians
+    var angleRadians = Math.atan2(p2.z - p1.z, p2.x - p1.x);
+    // angle in degrees
+    var angleDeg = angleRadians * 180 / Math.PI;
+
+    return angleRadians;
 }
 
 function newMatrix() {
