@@ -513,7 +513,7 @@ function makeInstance(geometry, color, x, name, hasFace = false) {
     const labelContainerElem = document.querySelector('#labels');
 
     const texture = new THREE.TextureLoader().load(
-        "/assets/texture/face.png"
+        "/assets/texture/face.PNG"
     );
 
     var materials;
@@ -652,7 +652,7 @@ function gameState(state) {
 
                     // 走過的路徑
                     const texture = new THREE.TextureLoader().load(
-                        "/assets/texture/yellow.jpg"
+                        "/assets/texture/yellow.JPG"
                     );
                     var pathPointGeo = new THREE.ConeGeometry( 12, 10, 10 );
                     var pathPointMesh = new THREE.Mesh(
