@@ -3,8 +3,8 @@ var camera, scene, renderer;
 var orbitControls;
 var plane;
 var mouse,
-    raycaster,
-    isShiftDown = false;
+    raycaster;
+
 var rollOverMesh, rollOverMaterial;
 var cubeGeo, cubeMaterial;
 var objects = [];
@@ -18,22 +18,24 @@ var controls; // dat.gui
 var stats;
 
 
-const boxSize = 50;
-var groundSize = localStorage.getItem("groundSize") ? parseInt(localStorage.getItem("groundSize")) : 500;
+const boxSize = 1;
+var groundSize = localStorage.getItem("groundSize") ? parseInt(localStorage.getItem("groundSize")) : 10;
 
 var bound = groundSize / 2 - boxSize / 2;
+var randBlockCount = 30;
+var moveSpeed = 2;
 
 var theMatrix = newMatrix();
 
 var startPos, endPos;
 var startCubPos_default = {
     x: -bound,
-    y: 25,
+    y: boxSize / 2,
     z: -bound
 };
 var endCubePos_default = {
     x: bound,
-    y: 25,
+    y: boxSize / 2,
     z: bound
 };
 
@@ -49,7 +51,7 @@ function init() {
         45,
         window.innerWidth / window.innerHeight,
         1,
-        20000
+        24000
     );
     camera.position.set(0, groundSize * 1.4, 0);
     camera.lookAt(0, 0, 0);
@@ -146,10 +148,10 @@ function init() {
     scene.add(endPos.cube);
 
     // lights
-    pointlight_startPos = new THREE.PointLight(0xFFE364, 2, 140);
+    pointlight_startPos = new THREE.PointLight(0xFFE364, 1, 2);
     pointlight_startPos.position.y = pointlight_startPos.position.y;
 
-    pointlight_endPos = new THREE.PointLight(0x00f7fc, 2, 140);
+    pointlight_endPos = new THREE.PointLight(0x00f7fc, 1, 2);
     pointlight_endPos.position.y = pointlight_endPos.position.y;
 
     scene.add(pointlight_startPos);
@@ -167,8 +169,6 @@ function init() {
     document.addEventListener("mouseup", function () {
         isMousePress = false;
     }, false);
-    document.addEventListener("keydown", onDocumentKeyDown, false);
-    document.addEventListener("keyup", onDocumentKeyUp, false);
     document.addEventListener('contextmenu', event => event.preventDefault());
 
 
@@ -183,20 +183,30 @@ function init() {
     // gui control panel
     controls = new function () {
         this.openOrbitControls = false;
-        this.randBlockCount = 30;
+        this.randBlockCount = randBlockCount;
         this.groundSize = groundSize;
+        this.moveSpeed = moveSpeed;
     };
 
     var gui = new dat.GUI();
-    var groundResize = gui.add(controls, 'groundSize', 250, 3000, 100).name('地圖大小');
-    gui.add(controls, 'randBlockCount', 1, 1500, 10).name('阻礙物數量');
-    gui.add(controls, 'openOrbitControls').name('移動攝影機');
+    var groundResize = gui.add(controls, 'groundSize', 4, 200, 2).name('地圖大小');
+    gui.add(controls, 'randBlockCount', 1, 2000, 20).name('阻礙物數量');
+    gui.add(controls, 'moveSpeed', 1, 10, 1).name('移動速度');
+    var orbitCamera = gui.add(controls, 'openOrbitControls').name('移動攝影機');
 
 
     groundResize.onFinishChange(function (value) {
         localStorage.setItem("groundSize", controls.groundSize);
         location.reload();
     });
+    orbitCamera.onFinishChange(function (value) {
+        if(controls.openOrbitControls){
+            rollOverMesh.visible = false;
+        }else{
+            rollOverMesh.visible = true;
+        }
+    });
+
     // auto resize
     window.addEventListener("resize", onWindowResize, false);
 
@@ -347,12 +357,16 @@ function onDocumentMouseMove(event) {
     var intersects = raycaster.intersectObjects(objects);
     if (intersects.length > 0) {
         var intersect = intersects[0];
+        intersect.point.y = -boxSize/2; // y軸固定
+        
         rollOverMesh.position.copy(intersect.point).add(intersect.face.normal);
+
         rollOverMesh.position
             .divideScalar(boxSize)
             .floor()
             .multiplyScalar(boxSize)
-            .addScalar(25);
+            .addScalar(boxSize / 2);
+
     }
 
     if (isMousePress) {
@@ -376,13 +390,16 @@ function onDocumentMouseDown(event) {
     if (intersects.length > 0) {
         var intersect = intersects[0];
 
-        if (isShiftDown || event.which == 3) {
+        intersect.point.y = -boxSize/2; // y軸固定
+        // 滑鼠右鍵消除方塊
+        if (event.which == 3) {
+
             // 消除障礙物
             if (intersect.object !== plane) {
                 scene.remove(intersect.object);
                 objects.splice(objects.indexOf(intersect.object), 1);
 
-                var blockPoint = xzToPoint(intersect.object.position.x, intersect.object.position.z);
+                let blockPoint = xzToPoint(intersect.object.position.x, intersect.object.position.z);
                 theMatrix[blockPoint.row][blockPoint.col] = 0;
             }
 
@@ -395,14 +412,21 @@ function onDocumentMouseDown(event) {
                 .divideScalar(boxSize)
                 .floor()
                 .multiplyScalar(boxSize)
-                .addScalar(25);
+                .addScalar(boxSize / 2);
 
-            var blockPoint = xzToPoint(voxel.position.x, voxel.position.z);
-
-            console.log("擺放點:", voxel.position, blockPoint);
-            theMatrix[blockPoint.row][blockPoint.col] = 1;
+            let blockPoint = xzToPoint(voxel.position.x, voxel.position.z);
+            
+            console.log("擺放點:", voxel.position, blockPoint,theMatrix[blockPoint.row][blockPoint.col]);
+            
+            // 判斷已經擺放
+            if (theMatrix[blockPoint.row][blockPoint.col] == 1) {
+                return;
+            }
+            
+            voxel.position.y = Math.abs(voxel.position.y);
 
             if (voxel.position.y == boxSize / 2) {
+                theMatrix[blockPoint.row][blockPoint.col] = 1;
                 scene.add(voxel);
                 objects.push(voxel);
             }
@@ -410,22 +434,6 @@ function onDocumentMouseDown(event) {
     }
 }
 
-function onDocumentKeyDown(event) {
-
-    switch (event.keyCode) {
-        case 16:
-            isShiftDown = true;
-            break;
-    }
-}
-
-function onDocumentKeyUp(event) {
-    switch (event.keyCode) {
-        case 16:
-            isShiftDown = false;
-            break;
-    }
-}
 
 // 目標導航
 $("#startGame").click(function (e) {
@@ -445,7 +453,7 @@ $("#resetGame").click(function () {
 // 隨機
 $("#random").click(function (e) {
     function getRandom(min, max) {
-        return Math.floor(Math.random() * max) + min;
+        return Math.floor(Math.random() * (max + 1)) + min;
     };
 
     function standardization(num) {
@@ -489,14 +497,19 @@ $("#random").click(function (e) {
             }
             voxel.position.copy({
                 x: voxelX,
-                y: 25,
+                y: boxSize / 2,
                 z: voxelZ
             });
 
             let blockPoint = xzToPoint(voxel.position.x, voxel.position.z);
-            theMatrix[blockPoint.row][blockPoint.col] = 1;
-            scene.add(voxel);
-            objects.push(voxel);
+            // 不重疊方塊
+            if (theMatrix[blockPoint.row][blockPoint.col] != 1) {
+                // 加入方塊
+                theMatrix[blockPoint.row][blockPoint.col] = 1;
+                scene.add(voxel);
+                objects.push(voxel);
+            }
+
         }
 
     }
@@ -580,6 +593,8 @@ function gameState(state) {
     var gameText = $(".gameText");
     var button = $("#startGame");
 
+    if(!controls.openOrbitControls)  rollOverMesh.visible = true;
+
     // stop
     if (state == 0) {
         gameText.text("Pause");
@@ -609,7 +624,8 @@ function gameState(state) {
             gameText.show();
             return;
         }
-
+        
+        rollOverMesh.visible = false;
         let coords = startPos.cube.position; // init vector3
 
         path.forEach((element, idx) => {
@@ -624,7 +640,7 @@ function gameState(state) {
                         .to({
                             x: element[0] * boxSize - bound,
                             z: element[1] * boxSize - bound
-                        }, 500)
+                        }, 1000 * 1 / controls.moveSpeed)
                         .easing(TWEEN.Easing.Quadratic.Out)
                         .onUpdate(() => {
 
@@ -654,19 +670,19 @@ function gameState(state) {
                     const texture = new THREE.TextureLoader().load(
                         "/assets/texture/yellow.JPG"
                     );
-                    var pathPointGeo = new THREE.ConeGeometry( 12, 10, 10 );
+                    var pathPointGeo = new THREE.ConeGeometry(boxSize / 3, boxSize / 3, 10);
                     var pathPointMesh = new THREE.Mesh(
                         pathPointGeo,
                         new THREE.MeshBasicMaterial({
-                            map:texture,
+                            map: texture,
                             side: THREE.DoubleSide
                         }),
                     );
-                    pathPointMesh.position.set(vectorA.x, 5 , vectorA.z);
-                    
+                    pathPointMesh.position.set(vectorA.x, boxSize / 3 / 2, vectorA.z);
+
                     scene.add(pathPointMesh);
                     objects.push(pathPointMesh)
-                }, 500 * idx)
+                }, 1000 * idx * 1 / controls.moveSpeed)
             );
 
 
@@ -698,12 +714,12 @@ function gameState(state) {
 
         startCubPos_default = {
             x: -bound,
-            y: 25,
+            y: boxSize / 2,
             z: -bound
         };
         endCubePos_default = {
             x: bound,
-            y: 25,
+            y: boxSize / 2,
             z: bound
         };
         startPos.cube.position.copy(startCubPos_default);
