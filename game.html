@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+  <head>
+    <title>GoGoMan</title>
+    <meta charset="utf-8">
+    <link rel=stylesheet type="text/css" href="./src/bootstrap.min.css">
+    <link rel=stylesheet type="text/css" href="./src/main.css">
+  </head>
+  <body>
+    <div id="Stats-output"></div>
+    <div id="container">
+      <h3 class="gameText display-2 text-white">
+
+      </h3>
+      <div class="plays">
+          <button id="startGame" class="btn btn-dark">遊戲開始</button>
+          <button id="resetGame" class="btn btn-light mt-5">重新開始</button>
+    
+      </div>
+      
+      <div id="labels"></div>
+
+      <div id="overlay">
+        <div class="spinner"></div>
+        <br/>
+        <h1>載入中...</h1>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="./src/three.min.js"></script>
+    <script type="text/javascript" src="./src/OrbitControls.js"></script>
+    <script type="text/javascript" src="./src/stats.min.js"></script>
+    <script type="text/javascript" src="./src/dat.gui.min.js"></script>
+    <script type="text/javascript" src="./src/jquery.min.js"></script>
+
+    <script type="text/javascript" src="./src/bootstrap.min.js"></script>
+    <script type="text/javascript" src="./src/tween.umd.js"></script>
+    
+    <script type="text/javascript" src="./src/pathfinding-browser.min.js"></script>
+
+    <script src="./src/game/event.js"></script>
+    <script src="./src/game/make.js"></script>
+    <script src="./src/game/controls.js"></script>
+    <script src="./src/game/skybox.js"></script>
+    <script src="./src/game/game.js"></script>
+  </body>
+</html>
