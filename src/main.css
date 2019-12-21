@@ -11,17 +11,6 @@ body {
   overflow: hidden;
 }
 
-.btn {
-  display: block;
-  margin: 15px;
-  width: 150px;
-  border-radius: 0;
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom-left-radius: 0;
-}
-
 .plays {
   position: absolute;
   top: 0;

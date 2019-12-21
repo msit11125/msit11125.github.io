@@ -41,11 +41,15 @@ function makeInstance(scene, geometry, color, x, name, hasFace = false) {
 
     cube.position.x = x;
 
+
     const elem = document.createElement('div');
     elem.textContent = name;
     labelContainerElem.appendChild(elem);
 
+    const position = cube.position.clone();
+    
     return {
+        position,
         cube,
         elem
     };
