@@ -6,35 +6,65 @@ var mouse,
     raycaster;
 
 var cubeGeo, cubeMaterial;
-var objects = [];
-var paths = [];
-var pathIdxs = [];
+var objects;
+var paths;
+var pathIdxs;
 
-var cubes = [];
+var cubes;
 
 var stats;
+var audioListener;
 
-const boxSize = 1;
-var groundSize = 30;
+var boxSize;
+var groundSize;
+var bound;
+var theMatrix;
 
-var bound = groundSize / 2 - boxSize / 2;
-var randBlockCount = 150;
-var moveSpeed = 2;
-
-var theMatrix = newMatrix();
-
-var enemies = [],
+var enemies,
     player;
-var enemyCount = 4;
 
-var enemies_position_default = [];
+var enemyCount
+var randBlockCount;
 
-var player_position_default = {};
+var enemies_position_default;
+var player_position_default;
 
-var isGameStart = false;
-var isGameOver = true;
-var score = 0; // 遊戲得分
-var difficult = 0.5; // 遊戲難度 (愈低愈難)
+var isGameStart;
+var isGameOver;
+var score; // 遊戲得分
+var difficult; // 遊戲難度 (愈低愈難)
+
+
+function parameters(enemyCount, difficult) {
+    objects = [];
+    paths = [];
+    pathIdxs = [];
+    cubes = [];
+    boxSize = 1;
+    groundSize = 30;
+    bound = groundSize / 2 - boxSize / 2;
+    enemies = [];
+    player = null;
+    enemyCount = enemyCount;
+    randBlockCount = 250;
+    enemies_position_default = [];
+    player_position_default = {};
+    isGameStart = false;
+    isGameOver = true;
+    score = 0; // 遊戲得分
+    difficult = difficult; // 遊戲難度 (愈低愈難)
+
+    // defaults 
+    theMatrix = newMatrix();
+    difficult = 0.5;
+    for (var i = 0; i < enemyCount; i++) {
+        enemies_position_default.push(new THREE.Vector3(0, boxSize / 2, 0));
+        pathIdxs.push(0);
+    }
+    player_position_default = new THREE.Vector3(0, boxSize / 2, 0);
+
+}
+
 
 function init() {
     scene = new THREE.Scene();
@@ -47,7 +77,7 @@ function init() {
         24000
     );
 
-    camera.position.set(0, 15, 5);
+    camera.position.set(0, 20, 8);
 
     // renderer
     renderer = new THREE.WebGLRenderer({
@@ -59,23 +89,35 @@ function init() {
     renderer.setClearColor(new THREE.Color(0x00000, 1.0));
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
-
-    // defaults init
-    for (var i = 0; i < enemyCount; i++) {
-        enemies_position_default.push(new THREE.Vector3(0, boxSize / 2, 0));
-        pathIdxs.push(0);
-    }
-    player_position_default = new THREE.Vector3(0, boxSize / 2, 0);
-
     // cubes
+
     cubeGeo = new THREE.BoxBufferGeometry(boxSize, boxSize, boxSize);
+
+    var cubetexture = new THREE.TextureLoader().load('/assets/texture/minecraft/dirt.png');
+    cubetexture.magFilter = THREE.NearestFilter;
     cubeMaterial = new THREE.MeshLambertMaterial({
-        color: 0xffffff
+        //color: 0xffffff,
+        map: cubetexture,
+        side: THREE.DoubleSide
     });
 
+
+
     // grid
-    var gridHelper = new THREE.GridHelper(groundSize, groundSize / boxSize, 0xb3b3b3, 0xb3b3b3);
-    scene.add(gridHelper);
+    // var gridHelper = new THREE.GridHelper(groundSize, groundSize / boxSize, 0xb3b3b3, 0xb3b3b3);
+    // scene.add(gridHelper);
+
+    // plane
+    const planeSize = groundSize;
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load(
+        "/assets/texture/minecraft/grass.png"
+    );
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.magFilter = THREE.NearestFilter;
+    const repeats = planeSize / boxSize;
+    texture.repeat.set(repeats, repeats);
 
     // plane
     var geometry = new THREE.PlaneBufferGeometry(groundSize, groundSize);
@@ -84,10 +126,11 @@ function init() {
     plane = new THREE.Mesh(
         geometry,
         new THREE.MeshBasicMaterial({
-            //visible: false,
-            transparent: true,
-            opacity: 0.8,
-            color: 0x28666D,
+            //visible: false
+            //transparent: true,
+            //opacity: 0.7,
+            map: texture,
+            //color: 0xc0c0c0,
             side: THREE.DoubleSide
         }),
     );
@@ -95,20 +138,19 @@ function init() {
     scene.add(plane);
     objects.push(plane);
 
-
     // raycaster
     raycaster = new THREE.Raycaster();
     mouse = new THREE.Vector2();
 
 
     // skybox
-    addSkyBox(scene);
+    addSkyBox(scene, 2);
 
     // 敵人座標
     for (var i = 0; i < enemyCount; i++) {
-        var geo = new THREE.BoxBufferGeometry(boxSize * 0.8, boxSize, boxSize* 0.8);
+        var geo = new THREE.BoxBufferGeometry(boxSize, boxSize, boxSize);
         var enemy = makeInstance(scene, geo, 0xFFE364, 0, '敵人' + (i + 1), true);
-        enemy.cube.position.copy(new THREE.Vector3(0, boxSize / 2 , 0));
+        enemy.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
         enemy.cube.castShadow = true;
         cubes.push(enemy);
         objects.push(enemy.cube);
@@ -117,7 +159,7 @@ function init() {
         enemies.push(enemy);
     }
     // 玩家座標
-    player = makeInstance(scene, cubeGeo, 0xD11141, 0, '', false);
+    player = makeInstance(scene, cubeGeo, 0xD11141, 0, '玩家', false);
     player.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
     player.cube.add(camera);
     cubes.push(player);
@@ -132,8 +174,14 @@ function init() {
     directionalLight.position.set(1, 0.75, 0.5).normalize();
     scene.add(directionalLight);
 
+
+    // audio
+    // create an AudioListener and add it to the camera
+    audioListener = new THREE.AudioListener();
+    camera.add(audioListener);
+
     initEvents(camera, renderer);
-    initMoveEvent(player, bound);
+    initMoveEvent(player, bound, audioListener);
 
     // stats 
     stats = initStats();
@@ -167,16 +215,16 @@ startGameButton.click(function (e) {
 });
 
 // 關卡生成
+function getRandom(min, max) {
+    return Math.floor(Math.random() * max) + min;
+};
+
+function standardization(num) {
+    return Math.ceil(num / boxSize) * boxSize + (boxSize / 2);
+}
+
 function GenerateGameLevel() {
     let voxels = [];
-
-    function getRandom(min, max) {
-        return Math.floor(Math.random() * (max + 1)) + min;
-    };
-
-    function standardization(num) {
-        return Math.ceil(num / boxSize) * boxSize + (boxSize / 2);
-    }
 
     function goPlayerEnemiesRandom() {
         for (var i = 0; i < enemyCount; i++) {
@@ -211,8 +259,20 @@ function GenerateGameLevel() {
             let voxel = new THREE.Mesh(cubeGeo, cubeMaterial);
             let voxelX = standardization(getRandom(-bound - boxSize, bound * 2));
             let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2));
-            // 避免重疊 TODO
+            // 避免重疊
+            let isRepeat = false;
+            enemies.forEach(enemy => {
+                if (enemy.position.x == voxelX && enemy.position.z == voxelZ) {
+                    isRepeat = true;
+                }
+            });
+            if (player.position.x == voxelX && player.position.z == voxelZ) {
+                isRepeat = true;
+            }
 
+            if (isRepeat) {
+                continue;
+            }
 
             voxel.position.copy({
                 x: voxelX,
@@ -235,9 +295,20 @@ function GenerateGameLevel() {
             var wallLen = bound * 2 + 1;
 
             // 增加牆壁
+            const planeSize = groundSize;
+            const texture = new THREE.TextureLoader().load(
+                "/assets/texture/minecraft/dirt.png"
+            );
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.magFilter = THREE.NearestFilter;
+            const repeats = planeSize / boxSize;
+            texture.repeat.set(repeats, 1);
+
             wallGeo = new THREE.BoxBufferGeometry(wallLen, boxSize, 0.01);
             wallMaterial = new THREE.MeshLambertMaterial({
-                color: 0xE8E8E8
+                map: texture,
+                side: THREE.DoubleSide
+                // color: 0x7D5A33
             });
 
             let voxel = new THREE.Mesh(wallGeo, wallMaterial);
@@ -285,13 +356,16 @@ function GenerateGameLevel() {
     goPlayerEnemiesRandom();
     goBlockRandom();
 
-    paths = findPath();
-    paths.forEach((path) => {
+    paths = [];
+    enemies.forEach((enemy, i) => {
+        var path = findPath(enemy, player);
+        paths.push(path);
+    });
 
+    paths.forEach((path) => {
         if (path.length === 0) {
-            gameText.text("找不到路徑！");
-            gameText.show();
-            return;
+            // gameText.text("找不到路徑！");
+            // gameText.show();
         }
     });
 
@@ -305,21 +379,54 @@ function GenerateGameLevel() {
     });
 };
 
-function findPath() {
-    var paths = [];
-    enemies.forEach((enemy, i) => {
-        var grid = new PF.Grid(Object.assign(theMatrix));
-        var finder = new PF.AStarFinder();
+function findPath(enemy, player) {
 
-        const enemyPoint = xzToPoint(enemy.position.x, enemy.position.z);
-        const playerPoint = xzToPoint(player.position.x, player.position.z);
+    var path_array;
 
-        var path_array = finder.findPath(enemyPoint.col, enemyPoint.row, playerPoint.col, playerPoint.row, grid);
+    const enemyPoint = xzToPoint(enemy.position.x, enemy.position.z);
+    const playerPoint = xzToPoint(player.position.x, player.position.z);
 
-        paths.push(path_array);
-    });
+    var grid = new PF.Grid(theMatrix);
+    var rndMethod = getRandom(1, 3);
+    var rndFindPosition = getRandom(1, 2);
+    var finder;
 
-    return paths;
+    switch (rndMethod) {
+        case 1:
+            finder = new PF.AStarFinder({
+                allowDiagonal: false
+            });
+            break;
+        case 2:
+            finder = new PF.DijkstraFinder({
+                allowDiagonal: false
+            });
+            break;
+        case 3:
+            finder = new PF.BreadthFirstFinder({
+                allowDiagonal: false
+            });
+            break;
+    }
+
+    if (rndFindPosition == 2) {
+        let voxelX = standardization(getRandom(-bound - boxSize, bound * 2));
+        let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2));
+        // 避免重疊
+
+        // 隨機找點
+        const rndPoint = xzToPoint(voxelX, voxelZ);
+        path_array = finder.findPath(enemyPoint.col, enemyPoint.row, rndPoint.col, rndPoint.row, grid);
+
+        if (path_array.length === 0) {
+            path_array = finder.findPath(enemyPoint.col, enemyPoint.row, playerPoint.col, playerPoint.row, grid);
+        }
+
+    } else {
+        path_array = finder.findPath(enemyPoint.col, enemyPoint.row, playerPoint.col, playerPoint.row, grid);
+    }
+
+    return path_array;
 }
 
 function gameState(state) {
@@ -340,18 +447,28 @@ function gameState(state) {
     if (state == "start") {
         if (isGameOver) {
             score = 0;
-            difficult = 0.5;
-            
+
             enemies.forEach((enemy, i) => {
+                pathIdxs[i] = 0;
                 enemy.cube.position.copy(enemies_position_default[i]);
                 enemy.position.copy(enemies_position_default[i]);
             });
+
             player.cube.position.copy(player_position_default);
             player.position.copy(player_position_default);
         }
 
         // path finding logic
-        paths = findPath();
+        paths = [];
+        enemies.forEach((enemy, i) => {
+            var path = findPath(enemy, player);
+            paths.push(path);
+        });
+
+        pathIdxs.forEach((pathIdx, i) => {
+            pathIdxs[i] = 1;
+        });
+
 
         gameText.hide();
         startGameButton.text("暫停");
@@ -364,7 +481,7 @@ function gameState(state) {
     if (state == "gameover") {
         gameText.text("Game Over");
         gameText.show();
-
+        makeSound(audioListener, '/assets/sounds/failure.ogg', 1);
         startGameButton.text("重新開始");
 
         isGameStart = false;
@@ -424,59 +541,62 @@ function render() {
     // 遊戲已開始
     if (isGameStart) {
         delta += clock.getDelta();
-
         if (delta > difficult) {
-           
-            enemies.forEach((enemy, i) => {
-                let rndTime = 1; //Math.random();
-                
-                setTimeout(()=> {
-                    let coords = enemy.cube.position; // init vector3
 
-                    var pathIdx = pathIdxs[i];
-                    var path = paths[i];
-    
-                    if (pathIdx < path.length) {
-                        var element = path[pathIdx];
-    
-    
-                        // -- 面對方向改變 --
-                        // 上個位置
-                        var p1 = {
-                            x: coords.x,
-                            z: coords.z
-                        };
-                        // 下個位置
-                        var p2 = {
-                            x: element[0] * boxSize - bound,
-                            z: element[1] * boxSize - bound
-                        }
-    
-                        // -- 移動改變 --
-                        let v = coords;
-                        let vTo = new THREE.Vector3(p2.x, coords.y, p2.z);
-                        enemy.position.x = vTo.x;
-                        enemy.position.z = vTo.z;
-                        new TWEEN.Tween(v)
-                            .to(vTo, 1000)
-                            .easing(TWEEN.Easing.Quadratic.Out)
-                            .onUpdate(() => {})
-                            .onComplete(() => {
-    
-                            })
-                            .start();
-    
-    
-                        var angleRadians = caculateVectorRotation(p1, p2);
-                        enemy.cube.rotation.y = -angleRadians;
-    
-                        pathIdxs[i] += 1;
-                        
+            enemies.forEach((enemy, i) => {
+                let coords = enemy.cube.position; // init vector3
+
+                var pathIdx = pathIdxs[i];
+                var path = paths[i];
+
+                if (pathIdx < path.length) {
+                    var next = path[pathIdx];
+
+                    // -- 面對方向改變 --
+                    // 上個位置
+                    var p1 = {
+                        x: coords.x,
+                        z: coords.z
+                    };
+                    // 下個位置
+                    var p2 = {
+                        x: next[0] * boxSize - bound,
+                        z: next[1] * boxSize - bound
+                    }
+                    if (p1.x == p2.x && p1.z == p2.z) {
+                        return;
                     }
 
-                }, 1000 * rndTime )
-                
+                    // -- 移動改變 --
+                    let v = coords;
+                    let vTo = new THREE.Vector3(p2.x, coords.y, p2.z);
+                    enemy.position.x = vTo.x;
+                    enemy.position.z = vTo.z;
+                    new TWEEN.Tween(v)
+                        .to(vTo, 1000 * difficult)
+                        .easing(TWEEN.Easing.Quadratic.Out)
+                        .onUpdate(() => {})
+                        .onComplete(() => {
+
+                        })
+                        .start();
+
+                    makeSound(audioListener, '/assets/sounds/footstep.ogg', 0.2);
+
+                    var angleRadians = caculateVectorRotation(p1, p2) - (90 * Math.PI / 180);
+                    enemy.cube.rotation.y = -angleRadians;
+
+                    pathIdxs[i] += 1;
+
+                } else {
+                    // 到終點後重新找點
+
+                    paths[i] = findPath(enemy, player);
+
+                    pathIdxs[i] = 1;
+                }
             });
+
 
             score += 1;
             if (score % 10 == 0) {
@@ -485,6 +605,17 @@ function render() {
             scoreBoard.text(score)
             delta = 0;
         }
+
+        // 檢查GameOver
+        enemies.forEach((enemy, i) => {
+
+            if (enemy.position.x == player.position.x &&
+                enemy.position.z == player.position.z) {
+
+                gameState("gameover");
+                return;
+            }
+        })
     }
 
 
@@ -520,22 +651,33 @@ function render() {
 
     requestAnimationFrame(render);
 
-    if (isGameStart) {
-
-        enemies.forEach((enemy, i) => {
-            if (enemy.cube.position.x == player.cube.position.x &&
-                enemy.cube.position.z == player.cube.position.z) {
-
-                gameState("gameover");
-                return;
-            }
-        })
-    }
 }
 
 
 
 // Init Window
-init();
+var difficultChoose = $("#difficultChoose");
+difficultChoose.on('change', function () {
+    // clear scene
+    scene = null;
+    difficult = 0.5;
 
-GenerateGameLevel();
+    switch (difficultChoose.val()) {
+        case 'easy':
+            enemyCount = 1;
+            break;
+        case 'normal':
+            enemyCount = 3;
+            break;
+        case 'hard':
+            enemyCount = 6;
+            break;
+        case 'dante':
+            enemyCount = 9;
+            difficult = 0.4;
+            break;
+    }
+    parameters(enemyCount, difficult, true);
+    init();
+    GenerateGameLevel();
+})

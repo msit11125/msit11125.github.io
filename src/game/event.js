@@ -13,19 +13,17 @@ function initEvents(camera, renderer) {
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
-
-
 }
 
 
-function initMoveEvent(player, bound) {
+function initMoveEvent(player, bound, audioListener) {
 
     // 監聽鍵盤按鍵事件，並回傳所按的按鍵為何
     window.addEventListener('keydown', onKeyDown, false);
 
     var isMoving = false;
     var nextPoint; // 下一個位置
-    
+
     function onKeyDown(e) {
         if (!isGameStart || isMoving) {
             return;
@@ -34,7 +32,7 @@ function initMoveEvent(player, bound) {
             case 38:
                 // up
                 nextPoint = xzToPoint(player.cube.position.x, player.cube.position.z - 1);
-                
+
                 if (theMatrix[nextPoint.row][nextPoint.col] == 1) {
                     break;
                 }
@@ -91,11 +89,7 @@ function initMoveEvent(player, bound) {
                 break;
 
         }
-        pathIdxs.forEach((pathIdx, i)=>{
-            pathIdxs[i] = 1;
-        });
 
-        paths = findPath();
     }
 
     function Move(toPosition) {
@@ -105,15 +99,17 @@ function initMoveEvent(player, bound) {
         player.position.x = vTo.x;
         player.position.z = vTo.z;
         new TWEEN.Tween(v)
-            .to(vTo, 100)
+            .to(vTo, 50)
             .easing(TWEEN.Easing.Quadratic.Out)
             .onUpdate(() => {
-                
+
             })
-            .onComplete(()=>{
+            .onComplete(() => {
                 isMoving = false;
             })
             .start();
+
+       makeSound(audioListener, '/assets/sounds/footstep.ogg', 1);
     }
 
 }

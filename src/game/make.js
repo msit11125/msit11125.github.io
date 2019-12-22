@@ -1,5 +1,3 @@
-
-
 function makeInstance(scene, geometry, color, x, name, hasFace = false) {
     const labelContainerElem = document.querySelector('#labels');
 
@@ -47,10 +45,24 @@ function makeInstance(scene, geometry, color, x, name, hasFace = false) {
     labelContainerElem.appendChild(elem);
 
     const position = cube.position.clone();
-    
+
     return {
         position,
         cube,
         elem
     };
+}
+
+function makeSound(listener, src, volume = 0.2) {
+    // create a global audio source
+    var sound = new THREE.Audio(listener);
+    
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load(src, function (buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(false);
+        sound.setVolume(volume);
+        sound.play();
+    });
+
 }

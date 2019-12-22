@@ -14,11 +14,12 @@
       </h3>
       <div class="plays text-center p-3" style="background: rgba(0,0,0,0.5);">
         <button id="startGame" class="btn btn-warning btn-block rounded-0">開始遊戲</button>
-        <select class="my-3 form-control rounded-0">
-          <option value="easy">簡單(AI數量:1)</option>
-          <option value="easy">中級(AI數量:2)</option>
-          <option value="easy">高級(AI數量:3)</option>
-          <option value="easy">地獄(AI數量:4)</option>
+        <select id="difficultChoose" class="my-3 form-control rounded-0">
+          <option value="" selected disabled> -- 選擇難度 -- </option>
+          <option value="easy">容易</option>
+          <option value="normal">一般</option>
+          <option value="hard">困難</option>
+          <option value="dante">地獄</option>
         </select>
         <h5 class="text-warning">分數：<span id="scoreBoard">0</span id="scoreBoard"></h5>
       </div>
@@ -29,6 +30,7 @@
 
     <script type="text/javascript" src="./src/three.min.js"></script>
     <script type="text/javascript" src="./src/OrbitControls.js"></script>
+    <script type="text/javascript" src="./src/BufferGeometryUtils.js"></script>
     <script type="text/javascript" src="./src/stats.min.js"></script>
     <script type="text/javascript" src="./src/dat.gui.min.js"></script>
     <script type="text/javascript" src="./src/jquery.min.js"></script>

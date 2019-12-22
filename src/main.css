@@ -1,6 +1,7 @@
 body {
   overflow: hidden;
   margin: 0px;
+  background: black;
 }
 
 #container {
@@ -29,11 +30,16 @@ body {
 
 #labels {
   position: absolute;
-  /* let us position ourself inside the container */
   left: 0;
-  /* make our position the top left of the container */
-  top: 0;
+  top: -40px;
   color: white;
+  width: 100%;
+  
+}
+
+#labels > div{
+  padding: 2px 15px;
+  background: rgba(0,0,0,0.5);
 }
 
 #labels>div {
