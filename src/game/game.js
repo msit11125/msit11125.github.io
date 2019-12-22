@@ -30,10 +30,12 @@ var player_position_default;
 var isGameStart;
 var isGameOver;
 var score; // 遊戲得分
+var scroe_magnification = 0; //難度得分倍率
 var difficult; // 遊戲難度 (愈低愈難)
 const normal_difficult = 0.5;
 const hard_difficult = 0.4;
-const dante_difficult = 0.2;
+const dante_difficult = 0.25;
+
 
 function parameters(enemyCount, difficult) {
     objects = [];
@@ -479,7 +481,7 @@ function gameState(state) {
 
     // game over
     if (state == "gameover") {
-        gameText.text("Game Over");
+        gameText.html(`Game Over<br/><span class="text-warning">你的得分：${score}</span>` );
         gameText.show();
         makeSound(audioListener, '/assets/sounds/failure.ogg', 1);
         startGameButton.text("重新開始");
@@ -489,8 +491,8 @@ function gameState(state) {
     }
 
     // ready
-    if(state == "ready"){
-        
+    if (state == "ready") {
+
         startGameButton.text("開始遊戲");
 
         isGameStart = false;
@@ -543,12 +545,14 @@ function newMatrix() {
 
 var clock = new THREE.Clock();
 var delta = 0;
-
+var scorePlusTime = 0;
 function render() {
 
     // 遊戲已開始
     if (isGameStart) {
-        delta += clock.getDelta();
+        var timespan = clock.getDelta();
+        delta += timespan;
+        scorePlusTime += timespan;  
         if (delta > difficult) {
 
             enemies.forEach((enemy, i) => {
@@ -585,11 +589,9 @@ function render() {
                         .easing(TWEEN.Easing.Quadratic.Out)
                         .onUpdate(() => {})
                         .onComplete(() => {
-
+                            makeSound(audioListener, '/assets/sounds/footstep.ogg', 0.1);
                         })
                         .start();
-
-                    makeSound(audioListener, '/assets/sounds/footstep.ogg', 0.2);
 
                     var angleRadians = caculateVectorRotation(p1, p2) - (90 * Math.PI / 180);
                     enemy.cube.rotation.y = -angleRadians;
@@ -604,14 +606,17 @@ function render() {
                     pathIdxs[i] = 1;
                 }
             });
-
-
-            score += 1;
-            if (score % 10 == 0) {
-                difficult *= 0.95;
-            }
-            scoreBoard.text(score)
             delta = 0;
+        }
+        
+        // 每秒計分
+        if(scorePlusTime > 1){
+            score += 1 * scroe_magnification; 
+            if (score % 10 == 0) {
+                difficult -= 0.01;
+            }
+            scoreBoard.text(score)           
+            scorePlusTime = 0;
         }
 
         // 檢查GameOver
@@ -664,23 +669,28 @@ function render() {
 
 // Init Window
 var difficultChoose = $("#difficultChoose");
-function setDifficult(){
+
+function setDifficult() {
 
     switch (difficultChoose.val()) {
         case 'easy':
             enemyCount = 1;
+            scroe_magnification = 1;
             difficult = normal_difficult;
             break;
         case 'normal':
-            enemyCount = 3;
+            enemyCount = 4;
+            scroe_magnification = 2;
             difficult = normal_difficult;
             break;
         case 'hard':
-            enemyCount = 6;
+            enemyCount = 7;
+            scroe_magnification = 3;
             difficult = hard_difficult;
             break;
         case 'dante':
-            enemyCount = 9;
+            enemyCount = 10;
+            scroe_magnification = 5;
             difficult = dante_difficult;
             break;
     }
@@ -690,10 +700,10 @@ difficultChoose.on('change', function () {
     gameState("ready");
     // clear scene
     $("#labels div").remove();
-    
-     while (objects.length > 1) {
+
+    while (objects.length > 1) {
         objects.forEach((e, idx, self) => {
-            if (e != plane ) {
+            if (e != plane) {
                 scene.remove(e);
                 self.splice(idx, 1);
             }

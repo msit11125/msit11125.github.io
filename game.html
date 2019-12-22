@@ -9,7 +9,7 @@
   <body>
     <div id="Stats-output"></div>
     <div id="container">
-      <h3 class="gameText display-2 text-white font-weight-bold">
+      <h3 class="gameText display-2 p-3 text-white font-weight-bold" style="background: rgba(0,0,0,0.5);z-index: 5;display: none;">
 
       </h3>
       <div class="plays text-center p-3" style="background: rgba(0,0,0,0.5);">
@@ -30,11 +30,12 @@
       <div id="discription" style="display: none;">
         <h1 class="my-4 text-warning">遊戲規則</h1>
         <p>在生存模式下，不要被敵人(海綿寶寶)抓到。</p>
+        <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
         <br/>
-        <h4><span class="text-info mr-3 font-weight-bold">容易</span> 1個敵人，初始速度一般。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">一般</span> 3個敵人，初始速度一般。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 6個敵人，初始速度稍快。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 9個敵人，初始速度極快。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">容易</span> 1個敵人，初始速度一般，得分x1。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">一般</span> 4個敵人，初始速度一般，得分x2。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 7個敵人，初始速度稍快，得分x3。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 10個敵人，初始速度極快，得分x5。</h4>
         <br/>
         <button id="closeDiscription" onclick="$('#discription').hide()"  class="btn btn-outline-light rounded-0 mb-4">關閉</button>
       </div>
