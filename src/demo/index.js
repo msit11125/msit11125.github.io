@@ -716,7 +716,7 @@ function gameState(state) {
                         z: element[1] * boxSize - bound
                     }
 
-                    var angleRadians = caculateVectorRotation(p1, p2);
+                    var angleRadians = caculateVectorRotation(p1, p2) - (90 * Math.PI / 180);
 
                     startPos.cube.rotation.y = -angleRadians;
 

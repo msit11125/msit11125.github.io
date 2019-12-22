@@ -2,8 +2,6 @@ var container = document.getElementById("container");
 var camera, scene, renderer;
 
 var plane;
-var mouse,
-    raycaster;
 
 var cubeGeo, cubeMaterial;
 var objects;
@@ -33,7 +31,9 @@ var isGameStart;
 var isGameOver;
 var score; // 遊戲得分
 var difficult; // 遊戲難度 (愈低愈難)
-
+const normal_difficult = 0.5;
+const hard_difficult = 0.4;
+const dante_difficult = 0.2;
 
 function parameters(enemyCount, difficult) {
     objects = [];
@@ -46,7 +46,7 @@ function parameters(enemyCount, difficult) {
     enemies = [];
     player = null;
     enemyCount = enemyCount;
-    randBlockCount = 250;
+    randBlockCount = 200;
     enemies_position_default = [];
     player_position_default = {};
     isGameStart = false;
@@ -138,33 +138,9 @@ function init() {
     scene.add(plane);
     objects.push(plane);
 
-    // raycaster
-    raycaster = new THREE.Raycaster();
-    mouse = new THREE.Vector2();
-
-
     // skybox
     addSkyBox(scene, 2);
 
-    // 敵人座標
-    for (var i = 0; i < enemyCount; i++) {
-        var geo = new THREE.BoxBufferGeometry(boxSize, boxSize, boxSize);
-        var enemy = makeInstance(scene, geo, 0xFFE364, 0, '敵人' + (i + 1), true);
-        enemy.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
-        enemy.cube.castShadow = true;
-        cubes.push(enemy);
-        objects.push(enemy.cube);
-        scene.add(enemy.cube);
-
-        enemies.push(enemy);
-    }
-    // 玩家座標
-    player = makeInstance(scene, cubeGeo, 0xD11141, 0, '玩家', false);
-    player.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
-    player.cube.add(camera);
-    cubes.push(player);
-    objects.push(player.cube);
-    scene.add(player.cube);
 
     // lights
     var ambientLight = new THREE.AmbientLight(0x606060);
@@ -181,7 +157,6 @@ function init() {
     camera.add(audioListener);
 
     initEvents(camera, renderer);
-    initMoveEvent(player, bound, audioListener);
 
     // stats 
     stats = initStats();
@@ -224,19 +199,18 @@ function standardization(num) {
 }
 
 function GenerateGameLevel() {
-    let voxels = [];
 
     function goPlayerEnemiesRandom() {
         for (var i = 0; i < enemyCount; i++) {
-            enemies[i].cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2));
-            enemies[i].cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2));
+            enemies[i].cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
+            enemies[i].cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
             enemies_position_default[i].x = enemies[i].cube.position.x;
             enemies_position_default[i].z = enemies[i].cube.position.z;
             enemies[i].position = enemies_position_default[i].clone();
         }
 
-        player.cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2));
-        player.cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2));
+        player.cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
+        player.cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
 
         player_position_default.x = player.cube.position.x;
         player_position_default.z = player.cube.position.z;
@@ -250,6 +224,8 @@ function GenerateGameLevel() {
             }
         });
 
+        // create Player Event
+        initMoveEvent(player, bound, audioListener);
     }
 
     function goBlockRandom() {
@@ -257,8 +233,8 @@ function GenerateGameLevel() {
         for (var i = 0; i < randBlockCount; i++) {
             // 增加障礙物
             let voxel = new THREE.Mesh(cubeGeo, cubeMaterial);
-            let voxelX = standardization(getRandom(-bound - boxSize, bound * 2));
-            let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2));
+            let voxelX = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
+            let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
             // 避免重疊
             let isRepeat = false;
             enemies.forEach(enemy => {
@@ -352,6 +328,29 @@ function GenerateGameLevel() {
         }
 
     }
+
+    let voxels = [];
+
+    // 敵人座標
+    for (var i = 0; i < enemyCount; i++) {
+        var geo = new THREE.BoxBufferGeometry(boxSize, boxSize, boxSize);
+        var enemy = makeInstance(scene, geo, 0xFFE364, 0, '敵人' + (i + 1), true);
+        enemy.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
+        enemy.cube.castShadow = true;
+        cubes.push(enemy);
+        objects.push(enemy.cube);
+        scene.add(enemy.cube);
+
+        enemies.push(enemy);
+    }
+    // 玩家座標
+    player = makeInstance(scene, cubeGeo, 0xD11141, 0, '玩家', false);
+    player.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
+    player.cube.add(camera);
+    cubes.push(player);
+    objects.push(player.cube);
+    scene.add(player.cube);
+
 
     goPlayerEnemiesRandom();
     goBlockRandom();
@@ -447,6 +446,7 @@ function gameState(state) {
     if (state == "start") {
         if (isGameOver) {
             score = 0;
+            setDifficult();
 
             enemies.forEach((enemy, i) => {
                 pathIdxs[i] = 0;
@@ -488,6 +488,14 @@ function gameState(state) {
         isGameOver = true;
     }
 
+    // ready
+    if(state == "ready"){
+        
+        startGameButton.text("開始遊戲");
+
+        isGameStart = false;
+        isGameOver = true;
+    }
 }
 
 
@@ -646,7 +654,6 @@ function render() {
         elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
     });
 
-
     renderer.render(scene, camera);
 
     requestAnimationFrame(render);
@@ -657,27 +664,49 @@ function render() {
 
 // Init Window
 var difficultChoose = $("#difficultChoose");
-difficultChoose.on('change', function () {
-    // clear scene
-    scene = null;
-    difficult = 0.5;
+function setDifficult(){
 
     switch (difficultChoose.val()) {
         case 'easy':
             enemyCount = 1;
+            difficult = normal_difficult;
             break;
         case 'normal':
             enemyCount = 3;
+            difficult = normal_difficult;
             break;
         case 'hard':
             enemyCount = 6;
+            difficult = hard_difficult;
             break;
         case 'dante':
             enemyCount = 9;
-            difficult = 0.4;
+            difficult = dante_difficult;
             break;
     }
+
+}
+difficultChoose.on('change', function () {
+    gameState("ready");
+    // clear scene
+    $("#labels div").remove();
+    
+     while (objects.length > 1) {
+        objects.forEach((e, idx, self) => {
+            if (e != plane ) {
+                scene.remove(e);
+                self.splice(idx, 1);
+            }
+        });
+    }
+    setDifficult();
+
     parameters(enemyCount, difficult, true);
-    init();
     GenerateGameLevel();
-})
+
+});
+
+
+parameters(1, 0.5, true);
+init();
+GenerateGameLevel();

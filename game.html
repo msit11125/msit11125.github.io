@@ -9,7 +9,7 @@
   <body>
     <div id="Stats-output"></div>
     <div id="container">
-      <h3 class="gameText display-2 text-white">
+      <h3 class="gameText display-2 text-white font-weight-bold">
 
       </h3>
       <div class="plays text-center p-3" style="background: rgba(0,0,0,0.5);">
@@ -21,11 +21,23 @@
           <option value="hard">困難</option>
           <option value="dante">地獄</option>
         </select>
+        <button id="openDiscription" onclick="$('#discription').show()" class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
         <h5 class="text-warning">分數：<span id="scoreBoard">0</span id="scoreBoard"></h5>
       </div>
       
       <div id="labels"></div>
 
+      <div id="discription" style="display: none;">
+        <h1 class="my-4 text-warning">遊戲規則</h1>
+        <p>在生存模式下，不要被敵人(海綿寶寶)抓到。</p>
+        <br/>
+        <h4><span class="text-info mr-3 font-weight-bold">容易</span> 1個敵人，初始速度一般。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">一般</span> 3個敵人，初始速度一般。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 6個敵人，初始速度稍快。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 9個敵人，初始速度極快。</h4>
+        <br/>
+        <button id="closeDiscription" onclick="$('#discription').hide()"  class="btn btn-outline-light rounded-0 mb-4">關閉</button>
+      </div>
     </div>
 
     <script type="text/javascript" src="./src/three.min.js"></script>
