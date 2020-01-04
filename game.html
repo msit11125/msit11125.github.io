@@ -3,15 +3,16 @@
   <head>
     <title>GoGoMan</title>
     <meta charset="utf-8">
-    <link rel=stylesheet type="text/css" href="./src/bootstrap.min.css">
-    <link rel=stylesheet type="text/css" href="./src/main.css">
+    <link rel=stylesheet type="text/css" href="./assets/css/bootstrap.min.css">
+    <link rel=stylesheet type="text/css" href="./assets/css/main.css">
   </head>
   <body>
     <div id="Stats-output"></div>
-    <div id="container">
-      <h3 class="gameText display-2 p-3 text-white font-weight-bold" style="background: rgba(0,0,0,0.5);z-index: 5;display: none;">
 
-      </h3>
+    <canvas id="small-map"></canvas>
+
+    <div id="container">
+      <h3 class="gameText display-2 p-3 text-white font-weight-bold" style="background: rgba(0,0,0,0.5);z-index: 5;display: none;"></h3>
       <div class="plays text-center p-3" style="background: rgba(0,0,0,0.5);">
         <button id="startGame" class="btn btn-warning btn-block rounded-0">開始遊戲</button>
         <select id="difficultChoose" class="my-3 form-control rounded-0">
@@ -27,31 +28,36 @@
       
       <div id="labels"></div>
 
-      <div id="discription" style="display: none;">
-        <h1 class="my-4 text-warning">遊戲規則</h1>
-        <p>在生存模式下，不要被敵人(海綿寶寶)抓到。</p>
+      <div id="discription">
+        <h1 class="my-4 text-warning font-weight-bold">3D 吃豆人</h1>
+        
+        <h2 class="mb-4 text-danger">遊戲規則</h2 class="my-4 text-warning">
+        <p>在生存模式下，不要被敵人(海綿寶寶)抓到，吃到黃色豆子+10分。</p>
         <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
         <br/>
         <h4><span class="text-info mr-3 font-weight-bold">容易</span> 1個敵人，初始速度一般，得分x1。</h4>
         <h4><span class="text-info mr-3 font-weight-bold">一般</span> 4個敵人，初始速度一般，得分x2。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 7個敵人，初始速度稍快，得分x3。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 10個敵人，初始速度極快，得分x5。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 7個敵人，初始速度稍快，得分x5。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 10個敵人，初始速度極快，得分x10。</h4>
         <br/>
-        <button id="closeDiscription" onclick="$('#discription').hide()"  class="btn btn-outline-light rounded-0 mb-4">關閉</button>
+        <div class="mb-4">
+          <input id="playerNameInput" type="text" placeholder="遊戲暱稱" value="">
+        </div>
+        <button id="closeDiscription" onclick=""  class="btn btn-outline-light rounded-0 mb-4">進入遊戲</button>
       </div>
     </div>
 
-    <script type="text/javascript" src="./src/three.min.js"></script>
-    <script type="text/javascript" src="./src/OrbitControls.js"></script>
-    <script type="text/javascript" src="./src/BufferGeometryUtils.js"></script>
-    <script type="text/javascript" src="./src/stats.min.js"></script>
-    <script type="text/javascript" src="./src/dat.gui.min.js"></script>
-    <script type="text/javascript" src="./src/jquery.min.js"></script>
+    <script type="text/javascript" src="./assets/js/three.min.js"></script>
+    <script type="text/javascript" src="./assets/js/OrbitControls.js"></script>
+    <script type="text/javascript" src="./assets/js/BufferGeometryUtils.js"></script>
+    <script type="text/javascript" src="./assets/js/stats.min.js"></script>
+    <script type="text/javascript" src="./assets/js/dat.gui.min.js"></script>
+    <script type="text/javascript" src="./assets/js/jquery.min.js"></script>
 
-    <script type="text/javascript" src="./src/bootstrap.min.js"></script>
-    <script type="text/javascript" src="./src/tween.umd.js"></script>
+    <script type="text/javascript" src="./assets/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="./assets/js/tween.umd.js"></script>
     
-    <script type="text/javascript" src="./src/pathfinding-browser.min.js"></script>
+    <script type="text/javascript" src="./assets/js/pathfinding-browser.min.js"></script>
 
       
     <script src="./src/game/event.js"></script>
@@ -59,5 +65,6 @@
     <script src="./src/game/controls.js"></script>
     <script src="./src/game/skybox.js"></script>
     <script src="./src/game/game.js"></script>
+    <script src="./src/game/game.gui.js"></script>
   </body>
 </html>

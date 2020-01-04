@@ -21,12 +21,11 @@ function initMoveEvent(player, bound, audioListener) {
     // 監聽鍵盤按鍵事件，並回傳所按的按鍵為何
     document.addEventListener('keydown', onKeyDown, false);
 
-    var isMoving = false;
     var nextPoint; // 下一個位置
 
 
     function loop(e) {
-        
+
         switch (e.which) {
             case 38:
             case 87:
@@ -92,22 +91,25 @@ function initMoveEvent(player, bound, audioListener) {
                 break;
 
         }
-        
+
     }
+
     function onKeyDown(e) {
-        if (!isGameStart || isMoving) {
+        if (!isGameStart) {
             return;
         }
 
         loop(e);
+
     }
 
     function Move(toPosition) {
-        isMoving = false;
-        let v = player.cube.position;
+        
+        let v = player.instance.cube.position;
         let vTo = toPosition;
         player.position.x = vTo.x;
         player.position.z = vTo.z;
+
         new TWEEN.Tween(v)
             .to(vTo, 100)
             .easing(TWEEN.Easing.Quadratic.Out)
@@ -115,8 +117,34 @@ function initMoveEvent(player, bound, audioListener) {
 
             })
             .onComplete(() => {
-                isMoving = false;
-                makeSound(audioListener, '/assets/sounds/footstep.ogg', 1);
+                
+                makeSound(audioListener, '/assets/sounds/footstep1.ogg', 0.5);
+                // check eating egg
+
+                eggs.forEach((egg, i, array) => {
+
+                    if (egg.position.x == vTo.x && egg.position.z == vTo.z) {
+                        console.log(vTo)
+                        makeSound(audioListener, '/assets/sounds/getcoin.wav', 0.7);
+
+                        // remove egg
+                        scene.remove(egg);
+                        array.splice(i, 1);
+
+                        // get score
+                        score += 10;
+                        $("#scoreBoard").text(score);
+                        
+                        var sprite = makeTextSprite("+10");
+                        vTo.y = 2;
+                        sprite.position.copy(vTo);
+                        scene.add(sprite);
+                        
+                        setTimeout(function () {
+                            scene.remove(sprite);
+                        }, 1000)
+                    }
+                });
             })
             .start();
 
