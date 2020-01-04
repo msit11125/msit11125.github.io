@@ -17,11 +17,17 @@ var boxSize; // 方塊大小
 var groundSize; // 棋盤大小
 var bound; // 儲存空間物件
 
-var theMatrix; // 棋盤障礙物矩陣
+var obstacleMatrix; // 棋盤障礙物矩陣
 
+const GameStatus = {
+    Ready: 0,
+    Start: 1,
+    Pause: 2,
+    GameOver: 3
+};
+var nowGameStatus = GameStatus.Ready;
 
-var isGameStart; // 是否已開始遊戲
-var isGameOver; // 遊戲是否結束
+var surviveSecond; // 存活秒數
 var score; // 遊戲得分
 var scroe_magnification = 0; //難度得分倍率
 var difficult; // 遊戲難度 (愈低愈難)
@@ -36,7 +42,7 @@ const normal_difficult = 0.5; // 中階難度AI速度
 const hard_difficult = 0.4; // 困難難度AI速度
 const dante_difficult = 0.3; // 地獄難度AI速度
 
-var playerName = "玩家"; // 玩家名稱
+var playerName = "玩家1"; // 玩家名稱
 
 
 function Enemy() {
@@ -68,21 +74,20 @@ function parameters(enemyCount, difficult) {
     objects = [];
     eggs = [];
     boxSize = 1;
-    groundSize = 30;
+    groundSize = 36;
     bound = groundSize / 2 - boxSize / 2;
-    enemies = [];
-    player = null;
     enemyCount = enemyCount;
     randBlockCount = 200;
-    isGameStart = false;
-    isGameOver = true;
-    score = 0; // 遊戲得分
+    score = 0; 
+    surviveSecond = 0;
     difficult = difficult; // 遊戲難度 (愈低愈難)
 
     // defaults 
-    theMatrix = newMatrix();
+    obstacleMatrix = newMatrix();
     difficult = 0.5;
 
+    enemies = [];
+    player = null;
     for (var i = 0; i < enemyCount; i++) {
         var enemy = new Enemy();
         enemy.position_default = new THREE.Vector3(0, boxSize / 2, 0);
@@ -106,7 +111,7 @@ function init() {
         24000
     );
 
-    camera.position.set(0, 15, 6);
+    camera.position.set(0, 13, 7);
 
     // 渲染器設置
     renderer = new THREE.WebGLRenderer({
@@ -129,9 +134,9 @@ function init() {
         side: THREE.DoubleSide
     });
 
-    // grid
-    // var gridHelper = new THREE.GridHelper(groundSize, groundSize / boxSize, 0xb3b3b3, 0xb3b3b3);
-    // scene.add(gridHelper);
+    //grid
+    var gridHelper = new THREE.GridHelper(groundSize, groundSize / boxSize, 0xb3b3b3, 0xb3b3b3);
+    scene.add(gridHelper);
 
     // plane
     const planeSize = groundSize;
@@ -160,7 +165,7 @@ function init() {
             side: THREE.DoubleSide
         }),
     );
-    
+
     scene.add(plane);
     objects.push(plane);
 
@@ -205,10 +210,11 @@ function init() {
 var gameText = $(".gameText");
 var startGameButton = $("#startGame");
 var scoreBoard = $("#scoreBoard");
+var surviveBoard = $("#surviveBoard");
 
 // 開始遊戲
 startGameButton.click(function (e) {
-    if (isGameStart && !isGameOver) {
+    if (nowGameStatus == GameStatus.Start) {
         gameState("pause");
     } else {
         gameState("start");
@@ -253,8 +259,6 @@ function GenerateGameLevel() {
             }
         });
 
-        // create Player Event
-        initMoveEvent(player, bound, audioListener);
     }
 
     function goBlockRandom() {
@@ -287,9 +291,9 @@ function GenerateGameLevel() {
 
             let blockPoint = xzToPoint(voxel.position.x, voxel.position.z);
             // 不重疊方塊
-            if (theMatrix[blockPoint.row][blockPoint.col] != 1) {
+            if (obstacleMatrix[blockPoint.row][blockPoint.col] != 1) {
                 // 加入方塊
-                theMatrix[blockPoint.row][blockPoint.col] = 1;
+                obstacleMatrix[blockPoint.row][blockPoint.col] = 1;
                 voxels.push(voxel);
             }
         }
@@ -380,6 +384,13 @@ function GenerateGameLevel() {
     goPlayerEnemiesRandom();
     goBlockRandom();
 
+    // 繪製迷你地圖
+    var playerPoint = xzToPoint(player.position.x, player.position.z);
+    var enemiesPoints = enemies.map(enemy => {
+        return xzToPoint(enemy.position.x, enemy.position.z)
+    });
+    drawMiniMap(obstacleMatrix, playerPoint, enemiesPoints);
+
     enemies.forEach((enemy, i) => {
         enemy.pathObjects.paths = [];
         var path = findPath(enemy, player);
@@ -404,7 +415,7 @@ function findPath(enemy, player) {
     const enemyPoint = xzToPoint(enemy.position.x, enemy.position.z);
     const playerPoint = xzToPoint(player.position.x, player.position.z);
 
-    var grid = new PF.Grid(theMatrix);
+    var grid = new PF.Grid(obstacleMatrix);
     var rndMethod = getRandom(1, 3);
     var rndFindPosition = getRandom(1, 2);
     var finder;
@@ -459,14 +470,17 @@ function gameState(state) {
 
         startGameButton.text("繼續遊戲");
 
-        isGameStart = false;
+        nowGameStatus = GameStatus.Pause;
     }
 
     // start
     if (state == "start") {
-        if (isGameOver) {
+        let startDelayTime = 50; // 延遲開始
+        if (nowGameStatus == GameStatus.GameOver) {
             score = 0;
-            eggs.forEach(egg=>{
+            surviveSecond = 0;
+
+            eggs.forEach(egg => {
                 scene.remove(egg);
             });
             eggs = [];
@@ -474,7 +488,6 @@ function gameState(state) {
             setDifficult();
 
             enemies.forEach((enemy, i) => {
-
                 enemy.pathObjects.pathIndex = 0;
                 enemy.instance.cube.position.copy(enemy.position_default);
                 enemy.position.copy(enemy.position_default);
@@ -482,7 +495,14 @@ function gameState(state) {
 
             player.instance.cube.position.copy(player.position_default);
             player.position.copy(player.position_default);
+
+            startDelayTime = 1000;
         }
+
+        nowGameStatus = GameStatus.Ready;
+
+        // create Player Event
+        initMoveEvent();
 
         // path finding logic
         enemies.forEach((enemy, i) => {
@@ -496,8 +516,10 @@ function gameState(state) {
         gameText.hide();
         startGameButton.text("暫停");
 
-        isGameOver = false;
-        isGameStart = true;
+        setTimeout(()=>{
+            nowGameStatus = GameStatus.Start;
+        } , startDelayTime)
+        
     }
 
     // game over
@@ -507,17 +529,15 @@ function gameState(state) {
         makeSound(audioListener, '/assets/sounds/failure.ogg', 1);
         startGameButton.text("重新開始");
 
-        isGameStart = false;
-        isGameOver = true;
+        nowGameStatus = GameStatus.GameOver;
     }
 
     // ready
     if (state == "ready") {
 
         startGameButton.text("開始遊戲");
-
-        isGameStart = false;
-        isGameOver = true;
+        
+        nowGameStatus = GameStatus.GameOver;
     }
 }
 
@@ -571,7 +591,7 @@ var scorePlusTime = 0;
 function render() {
 
     // 遊戲已開始
-    if (isGameStart) {
+    if (nowGameStatus == GameStatus.Start) {
         var timespan = clock.getDelta();
         delta += timespan;
         scorePlusTime += timespan;
@@ -613,7 +633,7 @@ function render() {
                         .onUpdate(() => {})
                         .onComplete(() => {
                             makeSound(audioListener, '/assets/sounds/footstep2.wav', 0.1);
-                            if (eggs.length < 10 /* 最多10個在地圖上 */ &&
+                            if (eggs.length < 20 /* 最多20個在地圖上 */ &&
                                 Math.random() > 0.9
                             ) {
                                 // put egg
@@ -625,6 +645,14 @@ function render() {
                                 objects.push(egg);
                                 eggs.push(egg);
                             }
+
+                            // maps 更新
+                            var playerPoint = xzToPoint(player.position.x, player.position.z);
+                            var enemiesPoints = enemies.map(enemy => {
+                                return xzToPoint(enemy.position.x, enemy.position.z)
+                            });
+                            drawMiniMap(obstacleMatrix, playerPoint, enemiesPoints);
+
                         })
                         .start();
 
@@ -645,17 +673,22 @@ function render() {
         // 每秒計分
         if (scorePlusTime > 1) {
             score += 1 * scroe_magnification;
+            surviveSecond += 1;
+            
+            surviveBoard.text(surviveSecond)
+            scoreBoard.text(score);
+            scorePlusTime = 0;
+
+            // AI速度提高
             if (score % 10 == 0) {
                 difficult -= 0.005;
             }
-            scoreBoard.text(score);
-            scorePlusTime = 0;
         }
 
         // 檢查GameOver
         enemies.forEach((enemy, i) => {
             // 檢查碰撞
-            if (RectCollision(enemy.instance.cube.position, player.instance.cube.position )) {
+            if (RectCollision(enemy.instance.cube.position, player.instance.cube.position)) {
 
                 gameState("gameover");
                 return;
@@ -711,12 +744,11 @@ function RectCollision(r1, r2) {
         maxX2 = r2.x + boxSize / 2,
         minZ2 = r2.z - boxSize / 2,
         maxZ2 = r2.z + boxSize / 2;
- 
+
     if (maxX1 > minX2 && maxX2 > minX1 &&
         maxZ1 > minZ2 && maxZ2 > minZ1) {
         return true;
-    }
-    else
+    } else
         return false;
 }
 
@@ -725,7 +757,7 @@ function setDifficult() {
     var difficultChoose = $("#difficultChoose");
     switch (difficultChoose.val()) {
         case 'easy':
-            enemyCount = 1;
+            enemyCount = 2;
             scroe_magnification = 1;
             difficult = normal_difficult;
             break;
@@ -735,12 +767,12 @@ function setDifficult() {
             difficult = normal_difficult;
             break;
         case 'hard':
-            enemyCount = 7;
+            enemyCount = 8;
             scroe_magnification = 5;
             difficult = hard_difficult;
             break;
         case 'dante':
-            enemyCount = 10;
+            enemyCount = 12;
             scroe_magnification = 10;
             difficult = dante_difficult;
             break;

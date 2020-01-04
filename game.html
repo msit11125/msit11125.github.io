@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>GoGoMan</title>
+    <title>3D吃豆人</title>
     <meta charset="utf-8">
     <link rel=stylesheet type="text/css" href="./assets/css/bootstrap.min.css">
     <link rel=stylesheet type="text/css" href="./assets/css/main.css">
@@ -13,9 +13,9 @@
 
     <div id="container">
       <h3 class="gameText display-2 p-3 text-white font-weight-bold" style="background: rgba(0,0,0,0.5);z-index: 5;display: none;"></h3>
-      <div class="plays text-center p-3" style="background: rgba(0,0,0,0.5);">
-        <button id="startGame" class="btn btn-warning btn-block rounded-0">開始遊戲</button>
-        <select id="difficultChoose" class="my-3 form-control rounded-0">
+      <div class="plays text-center p-3">
+        <button id="startGame" class="btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
+        <select id="difficultChoose" class="my-3 form-control rounded-0 bg-info text-white" style="text-align-last:center; ">
           <option value="" selected disabled> -- 選擇難度 -- </option>
           <option value="easy">容易</option>
           <option value="normal">一般</option>
@@ -23,27 +23,40 @@
           <option value="dante">地獄</option>
         </select>
         <button id="openDiscription" onclick="$('#discription').show()" class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
-        <h5 class="text-warning">分數：<span id="scoreBoard">0</span id="scoreBoard"></h5>
+       
+        <p class="text-warning">存活時間：<span id="surviveBoard">0</span>秒</p>
+        <h5 class="text-lightgreen">目前分數：<span id="scoreBoard">0</span></h5>
       </div>
-      
+
+      <div class="my-3 p-2 border border-white rankBoard">
+        <h5 class="text-white">排行榜</h5>
+        <div class="border-top border-white my-2 p-2">
+          <p class="text-white">1. 玩家1 (簡單)<span class="text-lightgreen ml-4">50</span></p>
+          
+        </div>
+      </div>
+
+
       <div id="labels"></div>
 
       <div id="discription">
-        <h1 class="my-4 text-warning font-weight-bold">3D 吃豆人</h1>
+        <h1 class="my-4 text-warning font-weight-bold display-4">3D 吃豆人</h1>
         
-        <h2 class="mb-4 text-danger">遊戲規則</h2 class="my-4 text-warning">
-        <p>在生存模式下，不要被敵人(海綿寶寶)抓到，吃到黃色豆子+10分。</p>
+        <h2 class="mb-4 text-light">遊戲規則</h2 class="my-4 text-warning">
+        <p>不要被敵人(海綿寶寶)抓到，吃到黃色豆子+10分。</p>
         <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
         <br/>
-        <h4><span class="text-info mr-3 font-weight-bold">容易</span> 1個敵人，初始速度一般，得分x1。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">容易</span> 2個敵人，初始速度一般，得分x1。</h4>
         <h4><span class="text-info mr-3 font-weight-bold">一般</span> 4個敵人，初始速度一般，得分x2。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 7個敵人，初始速度稍快，得分x5。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 10個敵人，初始速度極快，得分x10。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 8個敵人，初始速度稍快，得分x5。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 12個敵人，初始速度極快，得分x10。</h4>
         <br/>
-        <div class="mb-4">
-          <input id="playerNameInput" type="text" placeholder="遊戲暱稱" value="">
+        <div class="mb-4 d-flex justify-content-center">
+          <input id="playerNameInput" type="text" maxlength="10" class="form-control-lg rounded-0 text-primary font-weight-bold" placeholder="遊戲暱稱" value="">
         </div>
-        <button id="closeDiscription" onclick=""  class="btn btn-outline-light rounded-0 mb-4">進入遊戲</button>
+        <button id="closeDiscription" class="btn btn-outline-warning btn-lg rounded-0 mb-4">進入遊戲</button><button onclick="$('#discription').hide()"  class="btn ml-4 text-white btn-lg rounded-0 mb-4">關閉</button>
+
+        <p class="m-5 text-white text-center">※建議使用Chrome瀏覽器</p>
       </div>
     </div>
 
@@ -64,7 +77,8 @@
     <script src="./src/game/make.js"></script>
     <script src="./src/game/controls.js"></script>
     <script src="./src/game/skybox.js"></script>
-    <script src="./src/game/game.js"></script>
+    
     <script src="./src/game/game.gui.js"></script>
+    <script src="./src/game/game.js"></script>
   </body>
 </html>
