@@ -102,7 +102,7 @@ function parameters(enemyCount, difficult) {
 }
 
 
-function init() {
+function sceneInit() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000);
 
@@ -845,7 +845,7 @@ $("#difficultChoose").on('change', function () {
 
 parameters(0, 0.5, true);
 
-init();
+sceneInit();
 
 GenerateGameLevel();
 

@@ -142,10 +142,10 @@ function Move(toPosition) {
                     array.splice(i, 1);
 
                     // get score
-                    score += 10;
+                    score += scroe_magnification;
                     $("#scoreBoard").text(score);
 
-                    var sprite = makeTextSprite("+10");
+                    var sprite = makeTextSprite("+" + scroe_magnification);
                     vTo.y = 2;
                     sprite.position.copy(vTo);
                     scene.add(sprite);
