@@ -15,6 +15,9 @@ function initEvents(camera, renderer) {
     }
 }
 
+/**
+ * 註冊移動事件
+ */
 function initMoveEvent() {
     document.removeEventListener('keydown', onKeyDown);
     // 監聽鍵盤按鍵事件，並回傳所按的按鍵為何
@@ -103,9 +106,12 @@ function onKeyDown(e) {
         }
 
     }
-
 }
 
+/**
+ * 玩家移動
+ * @param {*} toPosition 目標位置 
+ */
 function Move(toPosition) {
 
     let v = player.instance.cube.position;
@@ -120,7 +126,6 @@ function Move(toPosition) {
 
         })
         .onComplete(() => {
-
             // 繪製小地圖
             var playerPoint = xzToPoint(player.position.x, player.position.z);
             var enemiesPoints = enemies.map(enemy => {

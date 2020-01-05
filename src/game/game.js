@@ -19,6 +19,7 @@ var bound; // 儲存空間物件
 
 var obstacleMatrix; // 棋盤障礙物矩陣
 
+// 遊戲狀態
 const GameStatus = {
     Ready: 0,
     Start: 1,
@@ -44,7 +45,7 @@ const dante_difficult = 0.3; // 地獄難度AI速度
 
 var playerName = "玩家" + makeid(5); // 玩家名稱
 
-
+// 敵人 類別物件
 function Enemy() {
     this.position_default = new THREE.Vector3(0, 0, 0);
     this.position = new THREE.Vector3(0, 0, 0);
@@ -56,7 +57,7 @@ function Enemy() {
         pathIndex: 0 // 索引
     }
 }
-
+// 玩家 類別物件
 function Player() {
     this.position_default = new THREE.Vector3(0, 0, 0);
     this.position = new THREE.Vector3(0, 0, 0);
@@ -90,19 +91,23 @@ function parameters(enemyCount, difficult) {
 
     enemies = [];
     player = null;
+
+    // 依數量 創造敵人
     for (var i = 0; i < enemyCount; i++) {
         var enemy = new Enemy();
         enemy.position_default = new THREE.Vector3(0, boxSize / 2, 0);
         enemies.push(enemy);
-
     }
+    // 創造玩家
     player = new Player();
     player.position_default = new THREE.Vector3(0, boxSize / 2, 0);
 
 }
 
-
-function sceneInit() {
+/**
+ * 建立基礎場景
+ */
+function basicSceneInit() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000);
 
@@ -140,7 +145,7 @@ function sceneInit() {
     var gridHelper = new THREE.GridHelper(groundSize, groundSize / boxSize, 0xb3b3b3, 0xb3b3b3);
     scene.add(gridHelper);
 
-    // plane
+    // plane 地圖
     const planeSize = groundSize;
     const loader = new THREE.TextureLoader();
     const texture = loader.load(
@@ -182,8 +187,8 @@ function sceneInit() {
     scene.add(ambientLight);
 
     var directionalLight = new THREE.DirectionalLight(0xffffff);
-    
-    directionalLight.target.position.set(0,0,0);
+
+    directionalLight.target.position.set(0, 0, 0);
     directionalLight.position.set(0, 20, 5) // 光線從正上偏下方打來
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
@@ -239,7 +244,7 @@ startGameButton.click(function (e) {
     }
 });
 
-// 關卡生成
+// 隨機方法
 function getRandom(min, max) {
     return Math.floor(Math.random() * max) + min;
 };
@@ -248,9 +253,27 @@ function standardization(num) {
     return Math.ceil(num / boxSize) * boxSize + (boxSize / 2);
 }
 
+// 創造遊戲關卡
 function GenerateGameLevel() {
+    let voxels = []; // 障礙物和圍牆
 
+    // 隨機生成敵人、玩家
     function goPlayerEnemiesRandom() {
+        // 敵人座標
+        for (var i = 0; i < enemyCount; i++) {
+            var geo = new THREE.BoxBufferGeometry(boxSize, boxSize, boxSize);
+            enemies[i].instance = makeInstance(scene, geo, 0xFFE364, 0, '敵人' + (i + 1), true);
+            enemies[i].instance.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
+            objects.push(enemies[i].instance.cube);
+            scene.add(enemies[i].instance.cube);
+
+        }
+        // 玩家座標
+        player.instance = makeInstance(scene, cubeGeo, 0xD11141, 0, playerName, false);
+        player.instance.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
+        player.instance.cube.add(camera);
+        objects.push(player.instance.cube);
+        scene.add(player.instance.cube);
 
         for (var i = 0; i < enemyCount; i++) {
             enemies[i].instance.cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
@@ -278,7 +301,7 @@ function GenerateGameLevel() {
         });
 
     }
-
+    // 隨機障礙物
     function goBlockRandom() {
 
         for (var i = 0; i < randBlockCount; i++) {
@@ -316,7 +339,7 @@ function GenerateGameLevel() {
             }
         }
     }
-
+    // 邊界圍牆
     function createBoundWall() {
         for (var direction = 1; direction <= 4; direction++) {
             var wallLen = bound * 2 + 1;
@@ -381,27 +404,9 @@ function GenerateGameLevel() {
 
     }
 
-    let voxels = [];
-
-    // 敵人座標
-    for (var i = 0; i < enemyCount; i++) {
-        var geo = new THREE.BoxBufferGeometry(boxSize, boxSize, boxSize);
-        enemies[i].instance = makeInstance(scene, geo, 0xFFE364, 0, '敵人' + (i + 1), true);
-        enemies[i].instance.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
-        objects.push(enemies[i].instance.cube);
-        scene.add(enemies[i].instance.cube);
-
-    }
-    // 玩家座標
-    player.instance = makeInstance(scene, cubeGeo, 0xD11141, 0, playerName, false);
-    player.instance.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
-    player.instance.cube.add(camera);
-    objects.push(player.instance.cube);
-    scene.add(player.instance.cube);
-
-
     goPlayerEnemiesRandom();
     goBlockRandom();
+    createBoundWall();
 
     // 繪製迷你地圖
     var playerPoint = xzToPoint(player.position.x, player.position.z);
@@ -416,17 +421,14 @@ function GenerateGameLevel() {
         enemy.pathObjects.paths = path;
     });
 
-    createBoundWall();
-
-    // Create
-    levelGenerateTimes = 0;
+    // 場景放入障礙物和圍牆
     voxels.forEach((voxel) => {
         scene.add(voxel);
         objects.push(voxel);
     });
 };
 
-// AI到玩家的Path
+// AI到玩家的路徑
 function findPath(enemy, player) {
 
     var path_array;
@@ -499,8 +501,8 @@ function gameActions(state) {
     // Start
     if (state == GameStatus.Start) {
         let startDelayTime = 50; // 延遲開始
-        if (nowGameStatus == GameStatus.GameOver
-            || nowGameStatus == GameStatus.Ready) {
+        if (nowGameStatus == GameStatus.GameOver ||
+            nowGameStatus == GameStatus.Ready) {
             score = 0;
             surviveSecond = 0;
 
@@ -620,24 +622,48 @@ function newMatrix() {
 }
 
 
+// ------- 渲染工作 -------
 var clock = new THREE.Clock();
 var delta = 0;
 var scorePlusTime = 0;
 
 function render() {
+    camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z);
+    stats.update();
+    TWEEN.update();
+    // 更新enemy和player的標籤
+    enemies.concat(player).forEach((cubeInfo, ndx) => {
+        const {
+            cube,
+            elem
+        } = cubeInfo.instance;
+        const tempV = new THREE.Vector3();
+        // get the position of the center of the cube
+        cube.updateWorldMatrix(true, false);
+        cube.getWorldPosition(tempV);
+        // get the normalized screen coordinate of that position
+        // x and y will be in the -1 to +1 range with x = -1 being
+        // on the left and y = -1 being on the bottom
+        tempV.project(camera);
 
-    // 遊戲已開始
+        // convert the normalized position to CSS coordinates
+        const x = (tempV.x * .5 + .5) * window.innerWidth;
+        const y = (tempV.y * -.5 + .5) * window.innerHeight;
+        // move the elem to that position
+        elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+    });
+
+    // ★ 判斷遊戲開始 ★ 
     if (nowGameStatus == GameStatus.Start) {
         var timespan = clock.getDelta();
         delta += timespan;
         scorePlusTime += timespan;
+        // 移動頻率
         if (delta > difficult) {
             // AI 移動
             enemies.forEach((enemy, i) => {
                 let coords = enemy.instance.cube.position; // init vector3
-
                 var pathIdx = enemy.pathObjects.pathIndex;
-
                 var path = enemy.pathObjects.paths;
 
                 if (pathIdx < path.length) {
@@ -732,36 +758,7 @@ function render() {
         });
     }
 
-
-
-    camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z);
-    stats.update();
-    TWEEN.update();
-
-    // 更新enemy和player的標籤
-    enemies.concat(player).forEach((cubeInfo, ndx) => {
-        const {
-            cube,
-            elem
-        } = cubeInfo.instance;
-        const tempV = new THREE.Vector3();
-        // get the position of the center of the cube
-        cube.updateWorldMatrix(true, false);
-        cube.getWorldPosition(tempV);
-        // get the normalized screen coordinate of that position
-        // x and y will be in the -1 to +1 range with x = -1 being
-        // on the left and y = -1 being on the bottom
-        tempV.project(camera);
-
-        // convert the normalized position to CSS coordinates
-        const x = (tempV.x * .5 + .5) * window.innerWidth;
-        const y = (tempV.y * -.5 + .5) * window.innerHeight;
-        // move the elem to that position
-        elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
-    });
-
     renderer.render(scene, camera);
-
     requestAnimationFrame(render);
 
 }
@@ -791,7 +788,7 @@ function RectCollision(r1, r2) {
 // Init Window
 function setDifficult() {
     var difficultChoose = $("#difficultChoose");
-   
+
     switch (difficultChoose.val()) {
         case '容易':
             enemyCount = 2;
@@ -843,10 +840,9 @@ $("#difficultChoose").on('change', function () {
     resetGame();
 });
 
+// 初始化
 parameters(0, 0.5, true);
-
-sceneInit();
-
+basicSceneInit();
 GenerateGameLevel();
 
 initFirebase();
