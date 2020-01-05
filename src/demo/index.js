@@ -54,11 +54,11 @@ function init() {
         24000
     );
     camera.position.set(0, groundSize * 1.4, 0);
-    camera.lookAt(0, 0, 0);
+    //camera.lookAt(0, 0, 0);
 
     // renderer
     renderer = new THREE.WebGLRenderer({
-        antialias: true
+        antialias: false
     });
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -207,6 +207,8 @@ function init() {
         }
     });
 
+    createBoundWall();
+    
     // auto resize
     window.addEventListener("resize", onWindowResize, false);
 
@@ -514,66 +516,64 @@ $("#random").click(function (e) {
 
     }
 
-    function createBoundWall() {
-        for (var direction = 1; direction <= 4; direction++) {
-            var wallLen = bound * 2 + 1;
-
-            // 增加牆壁
-            wallGeo = new THREE.BoxBufferGeometry(wallLen, boxSize, 0.01);
-            wallMaterial = new THREE.MeshLambertMaterial({
-                color: 0xE8E8E8
-            });
-
-            let voxel = new THREE.Mesh(wallGeo, wallMaterial);
-            switch (direction) {
-                case 1:
-                    // 上
-                    voxel.position.copy({
-                        x: 0,
-                        y: boxSize / 2,
-                        z: -bound - 0.5
-                    });
-                    break;
-                case 2:
-                    // 左
-                    voxel.position.copy({
-                        x: -bound - 0.5,
-                        y: boxSize / 2,
-                        z: 0
-                    });
-                    voxel.rotateY(90 * Math.PI /180)
-                    break;
-                case 3:
-                    // 下
-                    voxel.position.copy({
-                        x: 0,
-                        y: boxSize / 2,
-                        z: bound + 0.5
-                    });
-                    break;
-                case 4:
-                    // 右
-                    voxel.position.copy({
-                        x: bound + 0.5,
-                        y: boxSize / 2,
-                        z: 0
-                    });
-                    voxel.rotateY(90 * Math.PI /180)
-                    break;
-            }       
-            scene.add(voxel);
-            objects.push(voxel);
-        }
-    }
-
     gameState(2);
     goStartEndRandom();
     goBlockRandom();
 
-    createBoundWall();
 
 });
 
+
+function createBoundWall() {
+    for (var direction = 1; direction <= 4; direction++) {
+        var wallLen = bound * 2 + 1;
+
+        // 增加牆壁
+        wallGeo = new THREE.BoxBufferGeometry(wallLen, boxSize, 0.01);
+        wallMaterial = new THREE.MeshLambertMaterial({
+            color: 0xE8E8E8
+        });
+
+        let voxel = new THREE.Mesh(wallGeo, wallMaterial);
+        switch (direction) {
+            case 1:
+                // 上
+                voxel.position.copy({
+                    x: 0,
+                    y: boxSize / 2,
+                    z: -bound - 0.5
+                });
+                break;
+            case 2:
+                // 左
+                voxel.position.copy({
+                    x: -bound - 0.5,
+                    y: boxSize / 2,
+                    z: 0
+                });
+                voxel.rotateY(90 * Math.PI /180)
+                break;
+            case 3:
+                // 下
+                voxel.position.copy({
+                    x: 0,
+                    y: boxSize / 2,
+                    z: bound + 0.5
+                });
+                break;
+            case 4:
+                // 右
+                voxel.position.copy({
+                    x: bound + 0.5,
+                    y: boxSize / 2,
+                    z: 0
+                });
+                voxel.rotateY(90 * Math.PI /180)
+                break;
+        }       
+        scene.add(voxel);
+    }
+}
 
 
 function makeInstance(geometry, color, x, name, hasFace = false) {

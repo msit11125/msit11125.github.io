@@ -122,7 +122,7 @@ function basicSceneInit() {
 
     // 渲染器設置
     renderer = new THREE.WebGLRenderer({
-        antialias: false
+        antialias: false // 抗鋸齒
     });
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -196,8 +196,9 @@ function basicSceneInit() {
     orbitControls.target.set(0, 0, 0);
     orbitControls.enabled = true;
     orbitControls.keys = {};
-    //orbitControls.enableDamping = true;
-
+    orbitControls.enableDamping = true; // smooth
+    orbitControls.dampingFactor = 0.3;
+    orbitControls.rotateSpeed = 1;
 
     // audio
     // create an AudioListener and add it to the camera
@@ -358,7 +359,8 @@ function GenerateGameLevel() {
             });
 
             let voxel = new THREE.Mesh(wallGeo, wallMaterial);
-
+            voxel.receiveShadow = true;
+            
             switch (direction) {
                 case 1:
                     // 上
