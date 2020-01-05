@@ -122,11 +122,11 @@ function basicSceneInit() {
 
     // 渲染器設置
     renderer = new THREE.WebGLRenderer({
-        antialias: true
+        antialias: false
     });
     renderer.shadowMap.enabled = true;
-    //renderer.shadowMap.type = THREE.PCFShadowMap;
-
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    
     renderer.setClearColor(new THREE.Color(0x00000, 1.0));
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -140,9 +140,9 @@ function basicSceneInit() {
         map: cubetexture
     });
 
-    //grid
-    var gridHelper = new THREE.GridHelper(groundSize, groundSize / boxSize, 0xb3b3b3, 0xb3b3b3);
-    scene.add(gridHelper);
+    // Grid 網格
+    // var gridHelper = new THREE.GridHelper(groundSize, groundSize / boxSize, 0xb3b3b3, 0xb3b3b3);
+    // scene.add(gridHelper);
 
     // plane 地圖
     const planeSize = groundSize;
