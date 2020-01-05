@@ -73,10 +73,10 @@ function makeSkyBoxTheme2(){
         "/assets/texture/plants/negy.jpg"
     );
     let texture_lf = new THREE.TextureLoader().load(
-        "/assets/texture/plants/negz.jpg"
+        "/assets/texture/plants/posz.jpg"
     );
     let texture_rt = new THREE.TextureLoader().load(
-        "/assets/texture/plants/posz.jpg"
+        "/assets/texture/plants/negz.jpg"
     );
 
     materialArray.push(new THREE.MeshBasicMaterial({
