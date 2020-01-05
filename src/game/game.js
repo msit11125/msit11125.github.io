@@ -126,7 +126,7 @@ function basicSceneInit() {
     });
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFShadowMap;
-    
+
     renderer.setClearColor(new THREE.Color(0x00000, 1.0));
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -360,7 +360,7 @@ function GenerateGameLevel() {
 
             let voxel = new THREE.Mesh(wallGeo, wallMaterial);
             voxel.receiveShadow = true;
-            
+
             switch (direction) {
                 case 1:
                     // 上
@@ -673,7 +673,14 @@ function render() {
                         .easing(TWEEN.Easing.Quadratic.Out)
                         .onUpdate(() => { })
                         .onComplete(() => {
-                            makeSound(audioListener, '/assets/sounds/footstep2.wav', 0.1);
+                            // 計算與玩家距離
+                            var distanceX = Math.abs(vTo.x - player.position.x);
+                            var distanceZ = Math.abs(vTo.z - player.position.z);
+                            // 靠近才發出聲音
+                            if(distanceX <= 10 && distanceZ <= 10){
+                                makeSound(audioListener, '/assets/sounds/footstep2.wav', 0.1);
+                            }
+                            
                             if (eggs.length < 20 /* 最多20個在地圖上 */ &&
                                 Math.random() > 0.9
                             ) {
