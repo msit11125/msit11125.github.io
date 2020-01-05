@@ -35,10 +35,12 @@ function makeInstance(scene, geometry, color, x, name, hasFace = false) {
     }
 
     const cube = new THREE.Mesh(geometry, materials);
-    scene.add(cube);
+    cube.castShadow = true;
+    cube.receiveShadow = true;
 
     cube.position.x = x;
 
+    scene.add(cube);
 
     const elem = document.createElement('div');
     elem.textContent = name;
@@ -56,7 +58,7 @@ function makeInstance(scene, geometry, color, x, name, hasFace = false) {
 function makeSound(listener, src, volume = 0.2) {
     // create a global audio source
     var sound = new THREE.Audio(listener);
-    
+
     var audioLoader = new THREE.AudioLoader();
     audioLoader.load(src, function (buffer) {
         sound.setBuffer(buffer);
@@ -89,9 +91,21 @@ function makeTextSprite(message, opts) {
     texture.minFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
 
-    var spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-    var sprite = new THREE.Sprite( spriteMaterial );
-    sprite.scale.set( 2, 1, 1.0 );
-    sprite.center.set( 0, 1 );
+    var spriteMaterial = new THREE.SpriteMaterial({
+        map: texture
+    });
+    var sprite = new THREE.Sprite(spriteMaterial);
+    sprite.scale.set(2, 1, 1.0);
+    sprite.center.set(0, 1);
     return sprite;
+}
+
+function makeid(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
 }

@@ -42,7 +42,7 @@ const normal_difficult = 0.5; // 中階難度AI速度
 const hard_difficult = 0.4; // 困難難度AI速度
 const dante_difficult = 0.3; // 地獄難度AI速度
 
-var playerName = "玩家1"; // 玩家名稱
+var playerName = "玩家" + makeid(5); // 玩家名稱
 
 
 function Enemy() {
@@ -76,10 +76,12 @@ function parameters(enemyCount, difficult) {
     boxSize = 1;
     groundSize = 36;
     bound = groundSize / 2 - boxSize / 2;
-    enemyCount = enemyCount;
+
     randBlockCount = 200;
-    score = 0; 
+    score = 0;
     surviveSecond = 0;
+
+    enemyCount = enemyCount;
     difficult = difficult; // 遊戲難度 (愈低愈難)
 
     // defaults 
@@ -151,20 +153,22 @@ function init() {
     texture.repeat.set(repeats, repeats);
 
     // plane
-    var geometry = new THREE.PlaneBufferGeometry(groundSize, groundSize);
+    var geometry = new THREE.PlaneGeometry(groundSize, groundSize);
     geometry.rotateX(-Math.PI / 2);
 
     plane = new THREE.Mesh(
         geometry,
         new THREE.MeshBasicMaterial({
-            //visible: false
+            //visible: false,
             //transparent: true,
-            //opacity: 0.7,
+            //opacity: 1,
             map: texture,
-            //color: 0xc0c0c0,
-            side: THREE.DoubleSide
+            color: 0xffffff,
+            side: THREE.SingleSide
         }),
     );
+    plane.castShadow = false;
+    plane.receiveShadow = true;
 
     scene.add(plane);
     objects.push(plane);
@@ -178,8 +182,22 @@ function init() {
     scene.add(ambientLight);
 
     var directionalLight = new THREE.DirectionalLight(0xffffff);
-    directionalLight.position.set(1, 0.75, 0.5).normalize();
+    
+    directionalLight.target.position.set(0,0,0);
+    directionalLight.position.set(0, 20, 5) // 光線從正上偏下方打來
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
     scene.add(directionalLight);
+
+    // var directionalLightHelper = new THREE.DirectionalLightHelper( directionalLight, 5 );
+    // scene.add(directionalLightHelper);
+
+    var orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+    orbitControls.target.set(0, 0, 0);
+    orbitControls.enabled = true;
+    orbitControls.keys = {};
+
 
 
     // audio
@@ -215,9 +233,9 @@ var surviveBoard = $("#surviveBoard");
 // 開始遊戲
 startGameButton.click(function (e) {
     if (nowGameStatus == GameStatus.Start) {
-        gameState("pause");
+        gameActions(GameStatus.Pause);
     } else {
-        gameState("start");
+        gameActions(GameStatus.Start);
     }
 });
 
@@ -321,6 +339,7 @@ function GenerateGameLevel() {
             });
 
             let voxel = new THREE.Mesh(wallGeo, wallMaterial);
+
             switch (direction) {
                 case 1:
                     // 上
@@ -458,9 +477,13 @@ function findPath(enemy, player) {
     return path_array;
 }
 
-function gameState(state) {
-    // pause
-    if (state == "pause") {
+/**
+ * 遊戲動作
+ * @param {*} state 依據GameStatus判斷
+ */
+function gameActions(state) {
+    // Pause
+    if (state == GameStatus.Pause) {
         gameText.text("Pause");
         gameText.show();
 
@@ -473,10 +496,11 @@ function gameState(state) {
         nowGameStatus = GameStatus.Pause;
     }
 
-    // start
-    if (state == "start") {
+    // Start
+    if (state == GameStatus.Start) {
         let startDelayTime = 50; // 延遲開始
-        if (nowGameStatus == GameStatus.GameOver) {
+        if (nowGameStatus == GameStatus.GameOver
+            || nowGameStatus == GameStatus.Ready) {
             score = 0;
             surviveSecond = 0;
 
@@ -496,7 +520,7 @@ function gameState(state) {
             player.instance.cube.position.copy(player.position_default);
             player.position.copy(player.position_default);
 
-            startDelayTime = 1000;
+            startDelayTime = 2000;
         }
 
         nowGameStatus = GameStatus.Ready;
@@ -516,28 +540,40 @@ function gameState(state) {
         gameText.hide();
         startGameButton.text("暫停");
 
-        setTimeout(()=>{
+        setTimeout(() => {
             nowGameStatus = GameStatus.Start;
-        } , startDelayTime)
-        
+        }, startDelayTime)
+
     }
 
-    // game over
-    if (state == "gameover") {
+    // Game over
+    if (state == GameStatus.GameOver) {
         gameText.html(`Game Over<br/><span class="text-warning">你的得分：${score}</span>`);
         gameText.show();
         makeSound(audioListener, '/assets/sounds/failure.ogg', 1);
         startGameButton.text("重新開始");
 
+        // 儲存排名
+        var data = {
+            playerName: playerName,
+            surviveSecond: surviveSecond,
+            score: score,
+            difficult: $("#difficultChoose").val(),
+            createDate: new Date()
+        };
+
+        storeRank(data);
+        getTopBoard();
+
         nowGameStatus = GameStatus.GameOver;
     }
 
-    // ready
-    if (state == "ready") {
+    // Ready
+    if (state == GameStatus.Ready) {
 
         startGameButton.text("開始遊戲");
-        
-        nowGameStatus = GameStatus.GameOver;
+
+        nowGameStatus = GameStatus.Ready;
     }
 }
 
@@ -674,7 +710,7 @@ function render() {
         if (scorePlusTime > 1) {
             score += 1 * scroe_magnification;
             surviveSecond += 1;
-            
+
             surviveBoard.text(surviveSecond)
             scoreBoard.text(score);
             scorePlusTime = 0;
@@ -690,7 +726,7 @@ function render() {
             // 檢查碰撞
             if (RectCollision(enemy.instance.cube.position, player.instance.cube.position)) {
 
-                gameState("gameover");
+                gameActions(GameStatus.GameOver);
                 return;
             }
         });
@@ -755,23 +791,24 @@ function RectCollision(r1, r2) {
 // Init Window
 function setDifficult() {
     var difficultChoose = $("#difficultChoose");
+   
     switch (difficultChoose.val()) {
-        case 'easy':
+        case '容易':
             enemyCount = 2;
             scroe_magnification = 1;
             difficult = normal_difficult;
             break;
-        case 'normal':
+        case '一般':
             enemyCount = 4;
             scroe_magnification = 2;
             difficult = normal_difficult;
             break;
-        case 'hard':
+        case '困難':
             enemyCount = 8;
             scroe_magnification = 5;
             difficult = hard_difficult;
             break;
-        case 'dante':
+        case '地獄':
             enemyCount = 12;
             scroe_magnification = 10;
             difficult = dante_difficult;
@@ -784,7 +821,7 @@ function setDifficult() {
 }
 
 function resetGame() {
-    gameState("ready");
+    gameActions(GameStatus.Ready);
     // clear scene
     $("#labels div").remove();
 
@@ -807,6 +844,10 @@ $("#difficultChoose").on('change', function () {
 });
 
 parameters(0, 0.5, true);
+
 init();
 
 GenerateGameLevel();
+
+initFirebase();
+getTopBoard();

@@ -16,14 +16,27 @@ body {
   overflow: hidden;
 }
 
-.plays {
+.plays-main {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5000;
+  padding: 5vh 20vw!important;
+  transform: translate(-50%, -50%);
+  background:rgba(0,0,0,0.8);
+  width: 50%;
+}
+
+.plays-small {
   position: absolute;
   top: 10px;
   left: 5px;
   background: rgba(0,0,0,0.5);
   width: 250px;
 }
-.rankBoard{
+
+
+.topBoard{
   position: absolute;
   top: 0px;
   right: 5px;
@@ -83,7 +96,7 @@ body {
 }
 
 #discription {
-  background: rgba(0,0,0,0.7);
+  background: rgba(13, 64, 94, 0.85);
   color: #fff;
   position: absolute;
   height: 100%;
@@ -138,4 +151,14 @@ body {
   100% {
     transform: rotate(360deg);
   }
+}
+
+
+.gameTitle{
+  animation: colorFlash 1s infinite linear;
+}
+
+@keyframes colorFlash {
+  from { color: rgb(255, 243, 136); }
+	to { color: red; }
 }

@@ -13,26 +13,38 @@
 
     <div id="container">
       <h3 class="gameText display-2 p-3 text-white font-weight-bold" style="background: rgba(0,0,0,0.5);z-index: 5;display: none;"></h3>
-      <div class="plays text-center p-3">
-        <button id="startGame" class="btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
+      
+      <div class="plays-main text-center">
+        <button onclick="$('#startGame').click();$('.plays-small').show();$('.plays-main').hide();" class="startGame btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
+        <select onchange="$('#difficultChoose').val($(this).val()); resetGame();" class="my-4 form-control rounded-0 bg-info text-white" style="text-align-last:center; ">
+          <option value="" selected disabled> -- 選擇難度 -- </option>
+          <option value="容易">容易</option>
+          <option value="一般">一般</option>
+          <option value="困難">困難</option>
+          <option value="地獄">地獄</option>
+        </select>
+        <button id="openDiscription" onclick="$('#discription').show()" class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
+       
+      </div>
+      <div class="plays-small text-center p-3" style="display: none;">
+        <button id="startGame" class="startGame btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
         <select id="difficultChoose" class="my-3 form-control rounded-0 bg-info text-white" style="text-align-last:center; ">
           <option value="" selected disabled> -- 選擇難度 -- </option>
-          <option value="easy">容易</option>
-          <option value="normal">一般</option>
-          <option value="hard">困難</option>
-          <option value="dante">地獄</option>
+          <option value="容易">容易</option>
+          <option value="一般">一般</option>
+          <option value="困難">困難</option>
+          <option value="地獄">地獄</option>
         </select>
         <button id="openDiscription" onclick="$('#discription').show()" class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
        
         <p class="text-warning">存活時間：<span id="surviveBoard">0</span>秒</p>
-        <h5 class="text-lightgreen">目前分數：<span id="scoreBoard">0</span></h5>
+        <h3 class="text-lightgreen">得分：<span id="scoreBoard">0</span></h3>
       </div>
 
-      <div class="my-3 p-2 border border-white rankBoard">
-        <h5 class="text-white">排行榜</h5>
-        <div class="border-top border-white my-2 p-2">
-          <p class="text-white">1. 玩家1 (簡單)<span class="text-lightgreen ml-4">50</span></p>
-          
+      <div class="my-3 p-2 border border-white topBoard">
+        <h5 class="text-white">排行榜 Top 10</h5>
+        <div id="topBoardList" class="border-top border-white my-2 p-2">
+         
         </div>
       </div>
 
@@ -40,16 +52,16 @@
       <div id="labels"></div>
 
       <div id="discription">
-        <h1 class="my-4 text-warning font-weight-bold display-4">3D 吃豆人</h1>
+        <h1 class="gameTitle my-4 text-warning font-weight-bold display-4">3D 吃豆人</h1>
         
         <h2 class="mb-4 text-light">遊戲規則</h2 class="my-4 text-warning">
         <p>不要被敵人(海綿寶寶)抓到，吃到黃色豆子+10分。</p>
         <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
         <br/>
-        <h4><span class="text-info mr-3 font-weight-bold">容易</span> 2個敵人，初始速度一般，得分x1。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">一般</span> 4個敵人，初始速度一般，得分x2。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 8個敵人，初始速度稍快，得分x5。</h4>
-        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 12個敵人，初始速度極快，得分x10。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">容易</span> 2個敵人(AI)，敵人的初始速度「一般」，得分x1。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">一般</span> 4個敵人(AI)，敵人的初始速度「一般」，得分x2。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">困難</span> 8個敵人(AI)，敵人的初始速度「稍快」，得分x5。</h4>
+        <h4><span class="text-info mr-3 font-weight-bold">地獄</span> 12個敵人(AI)，敵人的初始速度「極快」，得分x10。</h4>
         <br/>
         <div class="mb-4 d-flex justify-content-center">
           <input id="playerNameInput" type="text" maxlength="10" class="form-control-lg rounded-0 text-primary font-weight-bold" placeholder="遊戲暱稱" value="">
@@ -60,6 +72,10 @@
       </div>
     </div>
 
+
+    <script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-firestore.js"></script>
+    
     <script type="text/javascript" src="./assets/js/three.min.js"></script>
     <script type="text/javascript" src="./assets/js/OrbitControls.js"></script>
     <script type="text/javascript" src="./assets/js/BufferGeometryUtils.js"></script>
@@ -80,5 +96,6 @@
     
     <script src="./src/game/game.gui.js"></script>
     <script src="./src/game/game.js"></script>
+
   </body>
 </html>

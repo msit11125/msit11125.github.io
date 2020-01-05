@@ -10,6 +10,60 @@ $('#playerNameInput').on('change', function () {
     playerName = $('#playerNameInput').val();
 });
 
+function initFirebase() {
+    // Your web app's Firebase configuration
+    var firebaseConfig = {
+        apiKey: "AIzaSyB2q7Dgyz0h65Kl-2s29CSX-wrsygW0KnE",
+        authDomain: "game-62015.firebaseapp.com",
+        databaseURL: "https://game-62015.firebaseio.com",
+        projectId: "game-62015",
+        storageBucket: "game-62015.appspot.com",
+        messagingSenderId: "610443782334",
+        appId: "1:610443782334:web:3ae14fa25c233cfa6fd6ef"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+}
+
+function getTopBoard() {
+    var db = firebase.firestore();
+    var rankDatas = [];
+    var topBoardList = $("#topBoardList");
+
+
+    db.collection("TopBoard")
+        .get()
+        .then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                rankDatas.push(doc.data());
+            });
+            // 排序名次 (分數由大到小)
+            rankDatas = rankDatas.sort(function (a, b) {
+                    return a.score < b.score ? 1 : -1;
+                })
+                .slice(0, 10); // top 10 
+
+            topBoardList.empty();
+            rankDatas.forEach((data, index) => {
+                topBoardList.append(
+                    $(`<p class="text-white">${index+1}. ${data.playerName} (${data.difficult})<span class="text-lightgreen float-right">${data.score}</span></p>`)
+                );
+            });
+        });
+}
+
+function storeRank(data) {
+    var db = firebase.firestore();
+    db.collection("TopBoard")
+        .add(data)
+        .then(function (docRef) {
+            console.log("Document written with ID: ", docRef.id);
+        })
+        .catch(function (error) {
+            console.error("Error adding document: ", error);
+        });
+}
+
 /**
  * 
  * @param {*} array2D 障礙物矩陣
@@ -46,7 +100,7 @@ function drawMiniMap(array2D, playerPoint, enemiesPoints) {
                     if (i == enemyPoint.row && j == enemyPoint.col) cellColor = 'rgb(255,255,0)';
                 });
             }
-            
+
             ctx.beginPath();
             ctx.fillStyle = cellColor;
             ctx.fillRect(x, y, cellSide, cellSide);
