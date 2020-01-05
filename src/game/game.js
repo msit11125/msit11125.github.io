@@ -125,7 +125,7 @@ function basicSceneInit() {
         antialias: true
     });
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    //renderer.shadowMap.type = THREE.PCFShadowMap;
 
     renderer.setClearColor(new THREE.Color(0x00000, 1.0));
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -136,9 +136,8 @@ function basicSceneInit() {
     var cubetexture = new THREE.TextureLoader().load('/assets/texture/minecraft/dirt.png');
     cubetexture.magFilter = THREE.NearestFilter;
     cubeMaterial = new THREE.MeshLambertMaterial({
-        //color: 0xffffff,
-        map: cubetexture,
-        side: THREE.DoubleSide
+        color: 0xffffff,
+        map: cubetexture
     });
 
     //grid
@@ -163,7 +162,7 @@ function basicSceneInit() {
 
     plane = new THREE.Mesh(
         geometry,
-        new THREE.MeshBasicMaterial({
+        new THREE.MeshLambertMaterial({
             //visible: false,
             //transparent: true,
             //opacity: 1,
@@ -186,23 +185,18 @@ function basicSceneInit() {
     var ambientLight = new THREE.AmbientLight(0x606060);
     scene.add(ambientLight);
 
-    var directionalLight = new THREE.DirectionalLight(0xffffff);
+    var spotLight = new THREE.SpotLight(0xffffff, 1.1); // intensity:100
 
-    directionalLight.target.position.set(0, 0, 0);
-    directionalLight.position.set(0, 20, 5) // 光線從正上偏下方打來
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    scene.add(directionalLight);
-
-    // var directionalLightHelper = new THREE.DirectionalLightHelper( directionalLight, 5 );
-    // scene.add(directionalLightHelper);
+    spotLight.target.position.set(0, 0, 0);
+    spotLight.position.set(0, 20, 5) // 光線從正上偏下方打來
+    spotLight.castShadow = true;
+    scene.add(spotLight);
 
     var orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
     orbitControls.target.set(0, 0, 0);
     orbitControls.enabled = true;
     orbitControls.keys = {};
-
+    //orbitControls.enableDamping = true;
 
 
     // audio
@@ -307,6 +301,8 @@ function GenerateGameLevel() {
         for (var i = 0; i < randBlockCount; i++) {
             // 增加障礙物
             let voxel = new THREE.Mesh(cubeGeo, cubeMaterial);
+            voxel.castShadow = true;
+            voxel.receiveShadow = true;
             let voxelX = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
             let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
             // 避免重疊
@@ -628,33 +624,14 @@ var delta = 0;
 var scorePlusTime = 0;
 
 function render() {
-    camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z);
     stats.update();
     TWEEN.update();
-    // 更新enemy和player的標籤
-    enemies.concat(player).forEach((cubeInfo, ndx) => {
-        const {
-            cube,
-            elem
-        } = cubeInfo.instance;
-        const tempV = new THREE.Vector3();
-        // get the position of the center of the cube
-        cube.updateWorldMatrix(true, false);
-        cube.getWorldPosition(tempV);
-        // get the normalized screen coordinate of that position
-        // x and y will be in the -1 to +1 range with x = -1 being
-        // on the left and y = -1 being on the bottom
-        tempV.project(camera);
-
-        // convert the normalized position to CSS coordinates
-        const x = (tempV.x * .5 + .5) * window.innerWidth;
-        const y = (tempV.y * -.5 + .5) * window.innerHeight;
-        // move the elem to that position
-        elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
-    });
 
     // ★ 判斷遊戲開始 ★ 
     if (nowGameStatus == GameStatus.Start) {
+        // 攝影機追隨
+        camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z);
+
         var timespan = clock.getDelta();
         delta += timespan;
         scorePlusTime += timespan;
@@ -692,7 +669,7 @@ function render() {
                     new TWEEN.Tween(v)
                         .to(vTo, 1000 * difficult)
                         .easing(TWEEN.Easing.Quadratic.Out)
-                        .onUpdate(() => {})
+                        .onUpdate(() => { })
                         .onComplete(() => {
                             makeSound(audioListener, '/assets/sounds/footstep2.wav', 0.1);
                             if (eggs.length < 20 /* 最多20個在地圖上 */ &&
@@ -700,8 +677,13 @@ function render() {
                             ) {
                                 // put egg
                                 var egg = new THREE.Mesh(new THREE.SphereGeometry(0.2, 30, 30), new THREE.MeshBasicMaterial({
-                                    color: 0xffff00
+                                    color: 0xffff00,
+                                    transparent: true,
+                                    opacity: 0.7,
                                 }));
+                                egg.castShadow = true;
+                                egg.receiveShadow = true;
+
                                 egg.position.copy(vTo);
                                 scene.add(egg);
                                 objects.push(egg);
@@ -756,6 +738,29 @@ function render() {
                 return;
             }
         });
+
+        // 更新enemy和player的標籤
+        enemies.concat(player).forEach((cubeInfo, ndx) => {
+            const {
+                cube,
+                elem
+            } = cubeInfo.instance;
+            const tempV = new THREE.Vector3();
+            // get the position of the center of the cube
+            cube.updateWorldMatrix(true, false);
+            cube.getWorldPosition(tempV);
+            // get the normalized screen coordinate of that position
+            // x and y will be in the -1 to +1 range with x = -1 being
+            // on the left and y = -1 being on the bottom
+            tempV.project(camera);
+
+            // convert the normalized position to CSS coordinates
+            const x = (tempV.x * .5 + .5) * window.innerWidth;
+            const y = (tempV.y * -.5 + .5) * window.innerHeight;
+            // move the elem to that position
+            elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+        });
+
     }
 
     renderer.render(scene, camera);
@@ -843,7 +848,6 @@ $("#difficultChoose").on('change', function () {
 // 初始化
 parameters(0, 0.5, true);
 basicSceneInit();
-GenerateGameLevel();
 
 initFirebase();
 getTopBoard();
