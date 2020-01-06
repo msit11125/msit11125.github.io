@@ -36,7 +36,6 @@ function onKeyDown(e) {
     loop(e);
 
     function loop(e) {
-
         var nextPoint; // 下一個位置
 
         switch (e.which) {
@@ -113,7 +112,6 @@ function onKeyDown(e) {
  * @param {*} toPosition 目標位置 
  */
 function Move(toPosition) {
-
     let v = player.instance.cube.position;
     let vTo = toPosition;
     player.position.x = vTo.x;

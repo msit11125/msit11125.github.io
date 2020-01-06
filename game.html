@@ -15,8 +15,9 @@
       <h3 class="gameText display-2 p-3 text-white font-weight-bold" style="background: rgba(0,0,0,0.5);z-index: 5;display: none;"></h3>
       
       <div class="plays-main text-center">
-        <button onclick="$('#startGame').click();$('.plays-small').show();$('.plays-main').hide();" class="startGame btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
-        <select onchange="$('#difficultChoose').val($(this).val()); resetGame();" class="my-4 form-control rounded-0" style="text-align-last:center; ">
+        <button onclick="$('#startGame').click();$('.plays-small').show();$('.plays-main').hide();" class="startGame btn btn-primary btn-lg btn-block rounded-0" 
+        style="font-size: 30px;border:5px solid rgb(170, 217, 255)">開始遊戲</button>
+        <select onchange="$('#difficultChoose').val($(this).val()); resetGame();" class="my-4 form-control rounded-0" style="text-align-last:center;font-size: 30px ">
           <option value="" selected disabled> -- 選擇難度 -- </option>
           <option value="容易">容易</option>
           <option value="一般">一般</option>
@@ -28,7 +29,7 @@
       </div>
       <div class="plays-small text-center p-3" style="display: none;">
         <button id="startGame" class="startGame btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
-        <select id="difficultChoose" class="my-3 form-control rounded-0 bg-info text-white" style="text-align-last:center; ">
+        <select id="difficultChoose" class="my-3 form-control rounded-0 bg-info text-white" style="text-align-last:center;; ">
           <option value="" selected disabled> -- 選擇難度 -- </option>
           <option value="容易">容易</option>
           <option value="一般">一般</option>
@@ -43,7 +44,7 @@
 
       <div class="my-3 p-2 border border-white topBoard">
         <h5 class="text-white">Top 10 排行榜  </h5>
-        <div id="topBoardList" class="border-top border-white my-2 p-2">
+        <div id="topBoardList" class="border-top border-white p-2">
          
         </div>
       </div>
@@ -52,24 +53,27 @@
       <div id="labels"></div>
 
       <div id="discription">
-        <h1 class="gameTitle my-4 text-warning font-weight-bold display-3">3D 吃豆人</h1>
-        
-        <h2 class="mb-4 text-light">遊戲規則</h2 class="my-4 text-warning">
-        <p>不要被敵人(海綿寶寶)抓到，吃到黃色豆子+1分。</p>
-        <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
-        <br/>
-        <h4><span class="text-lightgreen mr-3 font-weight-bold">容易</span> 2個敵人(AI)，敵人的初始速度「一般」，得分倍率x1。</h4>
-        <h4><span class="text-lightgreen mr-3 font-weight-bold">一般</span> 4個敵人(AI)，敵人的初始速度「一般」，得分倍率x2。</h4>
-        <h4><span class="text-lightgreen mr-3 font-weight-bold">困難</span> 8個敵人(AI)，敵人的初始速度「稍快」，得分倍率x5。</h4>
-        <h4><span class="text-lightgreen mr-3 font-weight-bold">地獄</span> 12個敵人(AI)，敵人的初始速度「極快」，得分倍率x10。</h4>
-        <br/>
-        <div class="mb-4 d-flex justify-content-center">
-          <input id="playerNameInput" type="text" maxlength="10" class="form-control-lg rounded-0 text-primary font-weight-bold" placeholder="遊戲暱稱" value="">
-        </div>
-        <button id="closeDiscription" class="btn btn-outline-warning btn-lg rounded-0 mb-4">進入遊戲</button><button onclick="$('#discription').hide()"  class="btn ml-4 text-white btn-lg rounded-0 mb-4">關閉</button>
+        <div class="content">
+          <h1 class="gameTitle my-4 text-warning font-weight-bold display-3">3D 吃豆人</h1>
+          
+          <h2 class="mb-4 text-light">遊戲規則</h2 class="my-4 text-warning">
+          <p>不要被敵人(海綿寶寶)抓到，吃到黃色豆子+1分。</p>
+          <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
+          <br/>
+          <h4><span class="text-lightgreen mr-3 font-weight-bold">容易</span> 4個敵人(AI)，敵人的初始速度「一般」，得分倍率x1。</h4>
+          <h4><span class="text-lightgreen mr-3 font-weight-bold">一般</span> 7個敵人(AI)，敵人的初始速度「一般」，得分倍率x2。</h4>
+          <h4><span class="text-lightgreen mr-3 font-weight-bold">困難</span> 10個敵人(AI)，敵人的初始速度「稍快」，得分倍率x5。</h4>
+          <h4><span class="text-lightgreen mr-3 font-weight-bold">地獄</span> 13個敵人(AI)，敵人的初始速度「極快」，得分倍率x10。</h4>
+          <br/>
+          <div class="mb-4 d-flex justify-content-center">
+            <input id="playerNameInput" type="text" maxlength="10" class="form-control-lg rounded-0 text-primary font-weight-bold" placeholder="遊戲暱稱" value="">
+          </div>
+          <button id="closeDiscription" class="btn btn-outline-warning btn-lg rounded-0 mb-4">進入遊戲</button><button onclick="$('#discription').hide()"  class="btn ml-4 text-white btn-lg rounded-0 mb-4">關閉</button>
 
-        <p class="m-5 text-white text-center">※ 建議使用Chrome瀏覽器</p>
+          <p class="m-5 text-white text-center">※ 建議使用Chrome瀏覽器</p>
+       </div>
       </div>
+
     </div>
 
 

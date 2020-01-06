@@ -39,8 +39,8 @@ var enemies,
     player;
 
 var enemyCount; // 敵人數量
-const normal_difficult = 0.5; // 中階難度AI速度
-const hard_difficult = 0.4; // 困難難度AI速度
+const normal_difficult = 0.4; // 一般難度AI速度
+const hard_difficult = 0.35; // 困難難度AI速度
 const dante_difficult = 0.3; // 地獄難度AI速度
 
 var playerName = "玩家" + makeid(5); // 玩家名稱
@@ -251,54 +251,51 @@ function standardization(num) {
 // 創造遊戲關卡
 function GenerateGameLevel() {
     let voxels = []; // 障礙物和圍牆
-
-    // 隨機生成敵人、玩家
-    function goPlayerEnemiesRandom() {
-        // 敵人座標
-        for (var i = 0; i < enemyCount; i++) {
-            var geo = new THREE.BoxBufferGeometry(boxSize, boxSize, boxSize);
-            enemies[i].instance = makeInstance(scene, geo, 0xFFE364, 0, '敵人' + (i + 1), true);
-            enemies[i].instance.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
-            objects.push(enemies[i].instance.cube);
-            scene.add(enemies[i].instance.cube);
-
-        }
-        // 玩家座標
+    // 隨機生成玩家
+    function createPlayerRandom() {
+        // 生成玩家
         player.instance = makeInstance(scene, cubeGeo, 0xD11141, 0, playerName, false);
         player.instance.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
         player.instance.cube.add(camera);
-        objects.push(player.instance.cube);
-        scene.add(player.instance.cube);
-
-        for (var i = 0; i < enemyCount; i++) {
-            enemies[i].instance.cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
-            enemies[i].instance.cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
-            enemies[i].position_default.x = enemies[i].instance.cube.position.x;
-            enemies[i].position_default.z = enemies[i].instance.cube.position.z;
-            enemies[i].position = enemies[i].position_default.clone();
-
-        }
-
         player.instance.cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
         player.instance.cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
 
-        player.position_default.x = player.instance.cube.position.x;
-        player.position_default.z = player.instance.cube.position.z;
-        player.position = player.position_default.clone();
+        player.position_default =  player.instance.cube.position.clone();
+        player.position = player.instance.cube.position.clone();
 
-        // 避免重疊
-        enemies.forEach((enemy) => {
-            if (enemy.position_default.x == player.position_default.x &&
-                enemy.position_default.z == player.position_default.z) {
-                goPlayerEnemiesRandom();
-                return;
-            }
-        });
-
+        objects.push(player.instance.cube);
+        scene.add(player.instance.cube);
     }
-    // 隨機障礙物
-    function goBlockRandom() {
 
+    // 隨機生成敵人
+    function createEnemiesRandom(count) {
+        function createEnemy(i) {
+            var newEnemy = new Enemy();
+            newEnemy.instance = makeInstance(scene, cubeGeo, 0xFFE364, 0, '敵人' + (i + 1), true);
+            newEnemy.instance.cube.position.copy(new THREE.Vector3(0, boxSize / 2, 0));
+            newEnemy.instance.cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
+            newEnemy.instance.cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
+
+            newEnemy.position_default = newEnemy.instance.cube.position.clone();
+            newEnemy.position = newEnemy.instance.cube.position.clone();
+            return newEnemy;
+        }
+        // 生成敵人
+        for (var i = 0; i < count; i++) {
+            enemies[i] = createEnemy(i);
+           
+            // 避免重疊玩家
+            while (enemies[i].position_default.x == player.position_default.x && enemies[i].position_default.z == player.position_default.z) {
+                enemies[i] = createEnemy(i); // 重新生成
+            }
+
+            objects.push(enemies[i].instance.cube);
+            scene.add(enemies[i].instance.cube);
+        }
+    }
+
+    // 隨機障礙物
+    function createBlockRandom() {
         for (var i = 0; i < randBlockCount; i++) {
             // 增加障礙物
             let voxel = new THREE.Mesh(cubeGeo, cubeMaterial);
@@ -306,13 +303,15 @@ function GenerateGameLevel() {
             voxel.receiveShadow = true;
             let voxelX = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
             let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
-            // 避免重疊
+           
+            // 避免重疊敵人
             let isRepeat = false;
             enemies.forEach(enemy => {
                 if (enemy.position.x == voxelX && enemy.position.z == voxelZ) {
                     isRepeat = true;
                 }
             });
+            // 避免重疊玩家
             if (player.position.x == voxelX && player.position.z == voxelZ) {
                 isRepeat = true;
             }
@@ -399,11 +398,11 @@ function GenerateGameLevel() {
             }
             voxels.push(voxel);
         }
-
     }
 
-    goPlayerEnemiesRandom();
-    goBlockRandom();
+    createPlayerRandom();
+    createEnemiesRandom(enemyCount);
+    createBlockRandom();
     createBoundWall();
 
     // 繪製迷你地圖
@@ -436,7 +435,7 @@ function findPath(enemy, player) {
 
     var grid = new PF.Grid(obstacleMatrix);
     var rndMethod = getRandom(1, 3);
-    var rndFindPosition = getRandom(1, 2);
+    var rndFindPosition = getRandom(1, 3);
     var finder;
 
     switch (rndMethod) {
@@ -456,11 +455,11 @@ function findPath(enemy, player) {
             });
             break;
     }
-
-    if (rndFindPosition == 2) {
+    
+    // 33% 機率隨機找點
+    if (rndFindPosition == 1) {
         let voxelX = standardization(getRandom(-bound - boxSize, bound * 2));
         let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2));
-        // 避免重疊
 
         // 隨機找點
         const rndPoint = xzToPoint(voxelX, voxelZ);
@@ -471,6 +470,7 @@ function findPath(enemy, player) {
         }
 
     } else {
+        // 66% 機率追玩家
         path_array = finder.findPath(enemyPoint.col, enemyPoint.row, playerPoint.col, playerPoint.row, grid);
     }
 
@@ -628,11 +628,11 @@ var scorePlusTime = 0;
 function render() {
     stats.update();
     TWEEN.update();
-
+    
     // ★ 判斷遊戲開始 ★ 
-    if (nowGameStatus == GameStatus.Start) {
-        // 攝影機追隨
-        camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z);
+    if (nowGameStatus == GameStatus.Start) {      
+         // 攝影機追隨
+        camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z); 
 
         var timespan = clock.getDelta();
         delta += timespan;
@@ -671,16 +671,16 @@ function render() {
                     new TWEEN.Tween(v)
                         .to(vTo, 1000 * difficult)
                         .easing(TWEEN.Easing.Quadratic.Out)
-                        .onUpdate(() => { })
+                        .onUpdate(() => {})
                         .onComplete(() => {
                             // 計算與玩家距離
                             var distanceX = Math.abs(vTo.x - player.position.x);
                             var distanceZ = Math.abs(vTo.z - player.position.z);
                             // 靠近才發出聲音
-                            if(distanceX <= 10 && distanceZ <= 10){
+                            if (distanceX <= 10 && distanceZ <= 10) {
                                 makeSound(audioListener, '/assets/sounds/footstep2.wav', 0.1);
                             }
-                            
+
                             if (eggs.length < 20 /* 最多20個在地圖上 */ &&
                                 Math.random() > 0.9
                             ) {
@@ -722,7 +722,6 @@ function render() {
             });
             delta = 0;
         }
-
         // 每秒計分
         if (scorePlusTime > 1) {
             score += 1 * scroe_magnification;
@@ -737,12 +736,10 @@ function render() {
                 difficult -= 0.005;
             }
         }
-
         // 檢查GameOver
         enemies.forEach((enemy, i) => {
             // 檢查碰撞
             if (RectCollision(enemy.instance.cube.position, player.instance.cube.position)) {
-
                 gameActions(GameStatus.GameOver);
                 return;
             }
@@ -777,7 +774,7 @@ function render() {
 
 }
 
-// 2D 碰撞檢測
+// 2D 矩形碰撞檢測
 function RectCollision(r1, r2) {
     // 這邊因為(X,Y)在方塊中心
     // 所以在取得min、max時，要 +/- width/2
@@ -805,22 +802,22 @@ function setDifficult() {
 
     switch (difficultChoose.val()) {
         case '容易':
-            enemyCount = 2;
+            enemyCount = 4;
             scroe_magnification = 1;
             difficult = normal_difficult;
             break;
         case '一般':
-            enemyCount = 4;
+            enemyCount = 7;
             scroe_magnification = 2;
             difficult = normal_difficult;
             break;
         case '困難':
-            enemyCount = 8;
+            enemyCount = 10;
             scroe_magnification = 5;
             difficult = hard_difficult;
             break;
         case '地獄':
-            enemyCount = 12;
+            enemyCount = 13;
             scroe_magnification = 10;
             difficult = dante_difficult;
             break;
@@ -828,7 +825,6 @@ function setDifficult() {
             enemyCount = 0;
             break;
     }
-
 }
 
 function resetGame() {
@@ -857,6 +853,6 @@ $("#difficultChoose").on('change', function () {
 // 初始化
 parameters(0, 0.5, true);
 basicSceneInit();
-
+GenerateGameLevel();
 initFirebase();
 getTopBoard();
