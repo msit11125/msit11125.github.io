@@ -1,105 +1,132 @@
 <!doctype html>
 <html>
-  <head>
-    <title>3D吃豆人</title>
-    <meta charset="utf-8">
-    <link rel=stylesheet type="text/css" href="./assets/css/bootstrap.min.css">
-    <link rel=stylesheet type="text/css" href="./assets/css/main.css">
-  </head>
-  <body>
-    <div id="Stats-output"></div>
 
-    <canvas id="small-map"></canvas>
+<head>
+  <title>3D吃豆人</title>
+  <meta charset="utf-8">
+  <link rel=stylesheet type="text/css" href="./assets/css/bootstrap.min.css">
+  <link rel=stylesheet type="text/css" href="./assets/css/main.css">
+  <link rel=stylesheet type="text/css" href="./assets/css/mobile.css">
+</head>
 
-    <div id="container">
-      <h3 class="gameText display-2 p-3 text-white font-weight-bold" style="background: rgba(0,0,0,0.5);z-index: 5;display: none;"></h3>
-      
-      <div class="plays-main text-center">
-        <button onclick="$('#startGame').click();$('.plays-small').show();$('.plays-main').hide();" class="startGame btn btn-primary btn-lg btn-block rounded-0" 
+<body>
+  <!--人物標籤-->
+  <div id="labels"></div>
+
+  <!--小地圖-->
+  <canvas id="small-map"></canvas>
+
+  <!--FPS狀態-->
+  <div id="Stats-output"></div>
+
+  <!--手機方向按鈕-->
+  <div id="mobile-control">
+    <button class="btn btn-outline-secondary btn-keyboard-up">↑</button><br>
+    <button class="btn btn-outline-secondary btn-keyboard-left">←</button>
+    <button class="btn btn-outline-secondary btn-keyboard-down">↓</button>
+    <button class="btn btn-outline-secondary btn-keyboard-right">→</button>
+  </div>
+
+  <!--遊戲-->
+  <div id="game">
+    <!-- 遊戲面板相關 -->
+    <h3 class="gameText display-2 p-3 text-white font-weight-bold"
+      style="background: rgba(0,0,0,0.5);z-index: 5;display: none;"></h3>
+
+    <div class="plays-main text-center">
+      <button onclick="$('#startGame').click();$('.plays-small').show();$('.plays-main').hide();"
+        class="startGame btn btn-primary btn-lg btn-block rounded-0"
         style="font-size: 30px;border:5px solid rgb(170, 217, 255)">開始遊戲</button>
-        <select onchange="$('#difficultChoose').val($(this).val()); resetGame();" class="my-4 form-control rounded-0" style="text-align-last:center;font-size: 30px ">
-          <option value="" selected disabled> -- 選擇難度 -- </option>
-          <option value="容易">容易</option>
-          <option value="一般">一般</option>
-          <option value="困難">困難</option>
-          <option value="地獄">地獄</option>
-        </select>
-        <button id="openDiscription" onclick="$('#discription').show()" class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
-       
-      </div>
-      <div class="plays-small text-center p-3" style="display: none;">
-        <button id="startGame" class="startGame btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
-        <select id="difficultChoose" class="my-3 form-control rounded-0 bg-info text-white" style="text-align-last:center;; ">
-          <option value="" selected disabled> -- 選擇難度 -- </option>
-          <option value="容易">容易</option>
-          <option value="一般">一般</option>
-          <option value="困難">困難</option>
-          <option value="地獄">地獄</option>
-        </select>
-        <button id="openDiscription" onclick="$('#discription').show()" class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
-       
-        <p class="text-warning">存活時間：<span id="surviveBoard">0</span>秒</p>
-        <h3 class="text-lightgreen">得分：<span id="scoreBoard">0</span></h3>
-      </div>
-
-      <div class="my-3 p-2 border border-white topBoard">
-        <h5 class="text-white">Top 10 排行榜  </h5>
-        <div id="topBoardList" class="border-top border-white p-2">
-         
-        </div>
-      </div>
-
-
-      <div id="labels"></div>
-
-      <div id="discription">
-        <div class="content">
-          <h1 class="gameTitle my-4 text-warning font-weight-bold display-3">3D 吃豆人</h1>
-          
-          <h2 class="mb-4 text-light">遊戲規則</h2 class="my-4 text-warning">
-          <p>不要被敵人(海綿寶寶)抓到，吃到黃色豆子+1分。</p>
-          <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
-          <br/>
-          <h4><span class="text-lightgreen mr-3 font-weight-bold">容易</span> 4個敵人(AI)，敵人的初始速度「一般」，得分倍率x1。</h4>
-          <h4><span class="text-lightgreen mr-3 font-weight-bold">一般</span> 7個敵人(AI)，敵人的初始速度「一般」，得分倍率x2。</h4>
-          <h4><span class="text-lightgreen mr-3 font-weight-bold">困難</span> 10個敵人(AI)，敵人的初始速度「稍快」，得分倍率x5。</h4>
-          <h4><span class="text-lightgreen mr-3 font-weight-bold">地獄</span> 13個敵人(AI)，敵人的初始速度「極快」，得分倍率x10。</h4>
-          <br/>
-          <div class="mb-4 d-flex justify-content-center">
-            <input id="playerNameInput" type="text" maxlength="10" class="form-control-lg rounded-0 text-primary font-weight-bold" placeholder="遊戲暱稱" value="">
-          </div>
-          <button id="closeDiscription" class="btn btn-outline-warning btn-lg rounded-0 mb-4">進入遊戲</button><button onclick="$('#discription').hide()"  class="btn ml-4 text-white btn-lg rounded-0 mb-4">關閉</button>
-
-          <p class="m-5 text-white text-center">※ 建議使用Chrome瀏覽器</p>
-       </div>
-      </div>
+      <select onchange="$('#difficultChoose').val($(this).val()); resetGame();" class="my-4 form-control rounded-0"
+        style="text-align-last:center;font-size: 30px ">
+        <option value="" selected disabled> -- 選擇難度 -- </option>
+        <option value="容易">容易</option>
+        <option value="一般">一般</option>
+        <option value="困難">困難</option>
+        <option value="地獄">地獄</option>
+      </select>
+      <button id="openDiscription" onclick="$('#discription').show()"
+        class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
 
     </div>
+    <div class="plays-small text-center p-3" style="display: none;">
+      <button id="startGame" class="startGame btn btn-primary btn-lg btn-block rounded-0">開始遊戲</button>
+      <select id="difficultChoose" class="my-3 form-control rounded-0 bg-info text-white"
+        style="text-align-last:center;; ">
+        <option value="" selected disabled> -- 選擇難度 -- </option>
+        <option value="容易">容易</option>
+        <option value="一般">一般</option>
+        <option value="困難">困難</option>
+        <option value="地獄">地獄</option>
+      </select>
+      <button id="openDiscription" onclick="$('#discription').show()"
+        class="mb-3 btn btn-outline-light btn-block rounded-0">遊戲規則</button>
+
+      <p class="text-warning">存活時間：<span id="surviveBoard">0</span>秒</p>
+      <h3 class="text-lightgreen">得分：<span id="scoreBoard">0</span></h3>
+    </div>
+
+    <div class="my-3 p-2 border border-white topBoard">
+      <h5 class="text-white">Top 10 排行榜 </h5>
+      <div id="topBoardList" class="border-top border-white p-2">
+
+      </div>
+    </div>
+
+    <div id="discription">
+      <div class="content">
+        <h1 class="gameTitle my-4 text-warning font-weight-bold display-4">3D 吃豆人</h1>
+
+        <h3 class="mb-4 text-warning">遊戲規則</h3>
+        <p>不要被敵人(海綿寶寶)抓到，吃到黃色豆子+1分。</p>
+        <p>操作方式： W、← (上) ， A、← (左) ， D、→ (右) ， S、↓ (下)</p>
+        <br />
+        <h5><span class="text-lightgreen mr-3 font-weight-bold">容易</span> 4個敵人(AI)，敵人的初始速度「一般」，得分倍率x1。</h5>
+        <h5><span class="text-lightgreen mr-3 font-weight-bold">一般</span> 7個敵人(AI)，敵人的初始速度「一般」，得分倍率x2。</h5>
+        <h5><span class="text-lightgreen mr-3 font-weight-bold">困難</span> 10個敵人(AI)，敵人的初始速度「稍快」，得分倍率x5。</h5>
+        <h5><span class="text-lightgreen mr-3 font-weight-bold">地獄</span> 13個敵人(AI)，敵人的初始速度「極快」，得分倍率x10。</h5>
+        <br />
+        <div class="mb-4 d-flex justify-content-center">
+          <input id="playerNameInput" type="text" maxlength="10"
+            class="form-control-lg rounded-0 text-primary font-weight-bold" placeholder="遊戲暱稱" value="">
+        </div>
+        <button id="closeDiscription" class="btn btn-outline-warning btn-lg rounded-0 mb-4">進入遊戲</button><button
+          onclick="$('#discription').hide()" class="btn ml-4 text-white btn-lg rounded-0 mb-4">關閉</button>
+
+        <p class="mt-5 text-white text-center">※ 建議使用Chrome瀏覽器</p>
+        <p class="text-white text-center">作者：msit11125.github.io</p>
+      </div>
+    </div>
+  </div>
 
 
-    <script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-firestore.js"></script>
-    
-    <script type="text/javascript" src="./assets/js/three.min.js"></script>
-    <script type="text/javascript" src="./assets/js/OrbitControls.js"></script>
-    <script type="text/javascript" src="./assets/js/BufferGeometryUtils.js"></script>
-    <script type="text/javascript" src="./assets/js/stats.min.js"></script>
-    <script type="text/javascript" src="./assets/js/dat.gui.min.js"></script>
-    <script type="text/javascript" src="./assets/js/jquery.min.js"></script>
 
-    <script type="text/javascript" src="./assets/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="./assets/js/tween.umd.js"></script>
-    
-    <script type="text/javascript" src="./assets/js/pathfinding-browser.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.6.1/firebase-firestore.js"></script>
 
-      
-    <script src="./src/game/event.js"></script>
-    <script src="./src/game/make.js"></script>
-    <script src="./src/game/controls.js"></script>
-    <script src="./src/game/skybox.js"></script>
-    
-    <script src="./src/game/game.gui.js"></script>
-    <script src="./src/game/game.js"></script>
+  <script type="text/javascript" src="./assets/js/three.min.js"></script>
+  <script type="text/javascript" src="./assets/js/OrbitControls.js"></script>
+  <script type="text/javascript" src="./assets/js/BufferGeometryUtils.js"></script>
+  <script type="text/javascript" src="./assets/js/stats.min.js"></script>
+  <script type="text/javascript" src="./assets/js/dat.gui.min.js"></script>
+  <script type="text/javascript" src="./assets/js/jquery.min.js"></script>
 
-  </body>
+  <script type="text/javascript" src="./assets/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="./assets/js/tween.umd.js"></script>
+
+  <script type="text/javascript" src="./assets/js/pathfinding-browser.min.js"></script>
+
+
+  <script src="./src/game/event.js"></script>
+  <script src="./src/game/make.js"></script>
+  <script src="./src/game/controls.js"></script>
+  <script src="./src/game/skybox.js"></script>
+
+  <script src="./src/game/game.gui.js"></script>
+  <script src="./src/game/game.gui.mobile.js"></script>
+
+  <script src="./src/game/game.js"></script>
+
+</body>
+
 </html>

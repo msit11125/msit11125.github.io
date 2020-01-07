@@ -8,7 +8,7 @@ body {
   background: black;
 }
 
-#container {
+#game {
   position: relative;
   /* makes this the origin of its children */
   width: 100vw;
