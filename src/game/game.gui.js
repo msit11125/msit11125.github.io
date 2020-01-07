@@ -45,8 +45,12 @@ function getTopBoard() {
 
             topBoardList.empty();
             rankDatas.forEach((data, index) => {
+                var color = '#ffffff';
+                if(playerName == data.playerName){
+                    color = '#ffff00';
+                }
                 topBoardList.append(
-                    $(`<p class="text-white">${index+1}. ${data.playerName} (${data.difficult})<span class="text-lightgreen float-right">${data.score}</span></p>`)
+                    $(`<p style="color:${color}">${index+1}. ${data.playerName} (${data.difficult})<span class="text-lightgreen float-right">${data.score}</span></p>`)
                 );
             });
         });
@@ -65,7 +69,7 @@ function storeRank(data) {
 }
 
 /**
- * 
+ * 繪製迷你地圖
  * @param {*} array2D 障礙物矩陣
  * @param {*} playerPoint 
  * @param {*} enemiesPoints

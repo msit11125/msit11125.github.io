@@ -6,7 +6,7 @@ var stats; // fps
 
 var cubeGeo, cubeMaterial; // 基本方塊
 var objects; // 儲存棋盤上的所有空間物件
-var eggs; // 複數蛋蛋
+var eggs; // 複數豆子
 
 
 var audioListener; // 接收聲音
@@ -15,7 +15,7 @@ var audioListener; // 接收聲音
 var plane; // 地圖
 var boxSize; // 方塊大小
 var groundSize; // 棋盤大小
-var bound; // 儲存空間物件
+var bound; // 圍牆邊界
 
 var obstacleMatrix; // 棋盤障礙物矩陣
 
@@ -51,10 +51,11 @@ function Enemy() {
     this.position = new THREE.Vector3(0, 0, 0);
 
     this.instance = null;
-
+   
     this.pathObjects = {
         paths: [], // 路徑
-        pathIndex: 0 // 索引
+        pathIndex: 0, // 索引
+        randomChangeDirectionIndex: 0 // 隨機變換方向的時間點索引
     }
 }
 // 玩家 類別物件
@@ -63,11 +64,6 @@ function Player() {
     this.position = new THREE.Vector3(0, 0, 0);
 
     this.instance = null;
-
-    this.pathObjects = {
-        paths: [], // 路徑
-        pathIndex: 0 // 索引
-    }
 }
 
 
@@ -260,7 +256,7 @@ function GenerateGameLevel() {
         player.instance.cube.position.x = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
         player.instance.cube.position.z = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
 
-        player.position_default =  player.instance.cube.position.clone();
+        player.position_default = player.instance.cube.position.clone();
         player.position = player.instance.cube.position.clone();
 
         objects.push(player.instance.cube);
@@ -283,7 +279,7 @@ function GenerateGameLevel() {
         // 生成敵人
         for (var i = 0; i < count; i++) {
             enemies[i] = createEnemy(i);
-           
+
             // 避免重疊玩家
             while (enemies[i].position_default.x == player.position_default.x && enemies[i].position_default.z == player.position_default.z) {
                 enemies[i] = createEnemy(i); // 重新生成
@@ -303,7 +299,7 @@ function GenerateGameLevel() {
             voxel.receiveShadow = true;
             let voxelX = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
             let voxelZ = standardization(getRandom(-bound - boxSize, bound * 2 + boxSize));
-           
+
             // 避免重疊敵人
             let isRepeat = false;
             enemies.forEach(enemy => {
@@ -455,7 +451,7 @@ function findPath(enemy, player) {
             });
             break;
     }
-    
+
     // 33% 機率隨機找點
     if (rndFindPosition == 1) {
         let voxelX = standardization(getRandom(-bound - boxSize, bound * 2));
@@ -473,6 +469,11 @@ function findPath(enemy, player) {
         // 66% 機率追玩家
         path_array = finder.findPath(enemyPoint.col, enemyPoint.row, playerPoint.col, playerPoint.row, grid);
     }
+
+    // 隨機變換索引時間點
+    enemy.randomChangeDirectionIndex = path_array.length > 10 ? 
+    Math.floor(Math.random() * (path_array.length - 10)) + 10 // 10 ~ path.length
+     : path_array.length; 
 
     return path_array;
 }
@@ -498,7 +499,7 @@ function gameActions(state) {
 
     // Start
     if (state == GameStatus.Start) {
-        let startDelayTime = 50; // 延遲開始
+        let delayMSecond = 50; // 延遲開始
         if (nowGameStatus == GameStatus.GameOver ||
             nowGameStatus == GameStatus.Ready) {
             score = 0;
@@ -520,7 +521,7 @@ function gameActions(state) {
             player.instance.cube.position.copy(player.position_default);
             player.position.copy(player.position_default);
 
-            startDelayTime = 2000;
+            delayMSecond = 2000;
         }
 
         nowGameStatus = GameStatus.Ready;
@@ -537,12 +538,28 @@ function gameActions(state) {
         });
 
 
-        gameText.hide();
         startGameButton.text("暫停");
 
-        setTimeout(() => {
+        if (delayMSecond >= 1000) {
+            gameText.show();
+            var second = delayMSecond / 1000;
+            gameText.text(second--);
+
+            var reciprocal = setInterval(() => {
+                gameText.text(second);
+                second--;
+            }, 1000);
+
+            setTimeout(() => {
+                nowGameStatus = GameStatus.Start;
+                clearInterval(reciprocal);
+                gameText.hide();
+            }, delayMSecond);
+
+        } else {
             nowGameStatus = GameStatus.Start;
-        }, startDelayTime)
+            gameText.hide();
+        }
 
     }
 
@@ -626,13 +643,38 @@ var delta = 0;
 var scorePlusTime = 0;
 
 function render() {
+    // 攝影機追隨
+    camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z);
+
+    // 更新enemy和player的標籤
+    enemies.concat(player).forEach((cubeInfo, ndx) => {
+        const {
+            cube,
+            elem
+        } = cubeInfo.instance;
+        const tempV = new THREE.Vector3();
+        // get the position of the center of the cube
+        cube.updateWorldMatrix(true, false);
+        cube.getWorldPosition(tempV);
+        // get the normalized screen coordinate of that position
+        // x and y will be in the -1 to +1 range with x = -1 being
+        // on the left and y = -1 being on the bottom
+        tempV.project(camera);
+
+        // convert the normalized position to CSS coordinates
+        const x = (tempV.x * .5 + .5) * window.innerWidth;
+        const y = (tempV.y * -.5 + .5) * window.innerHeight;
+        // move the elem to that position
+        elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
+    });
+
+    // 更新其他
     stats.update();
     TWEEN.update();
-    
+
+
     // ★ 判斷遊戲開始 ★ 
-    if (nowGameStatus == GameStatus.Start) {      
-         // 攝影機追隨
-        camera.lookAt(player.instance.cube.position.x, player.instance.cube.position.y, player.instance.cube.position.z); 
+    if (nowGameStatus == GameStatus.Start) {
 
         var timespan = clock.getDelta();
         delta += timespan;
@@ -644,10 +686,10 @@ function render() {
                 let coords = enemy.instance.cube.position; // init vector3
                 var pathIdx = enemy.pathObjects.pathIndex;
                 var path = enemy.pathObjects.paths;
-
-                if (pathIdx < path.length) {
+                
+                // 尚未換finding前
+                if (pathIdx < enemy.randomChangeDirectionIndex) {
                     var next = path[pathIdx];
-
                     // -- 面對方向改變 --
                     // 上個位置
                     var p1 = {
@@ -688,7 +730,7 @@ function render() {
                                 var egg = new THREE.Mesh(new THREE.SphereGeometry(0.2, 30, 30), new THREE.MeshBasicMaterial({
                                     color: 0xffff00,
                                     transparent: true,
-                                    opacity: 0.7,
+                                    opacity: 0.8,
                                 }));
                                 egg.castShadow = true;
                                 egg.receiveShadow = true;
@@ -715,7 +757,7 @@ function render() {
                     enemy.pathObjects.pathIndex += 1;
 
                 } else {
-                    // 到終點後重新找點
+                    // 到換點索引後重新找點
                     enemy.pathObjects.paths = findPath(enemy, player);
                     enemy.pathObjects.pathIndex = 1;
                 }
@@ -743,28 +785,6 @@ function render() {
                 gameActions(GameStatus.GameOver);
                 return;
             }
-        });
-
-        // 更新enemy和player的標籤
-        enemies.concat(player).forEach((cubeInfo, ndx) => {
-            const {
-                cube,
-                elem
-            } = cubeInfo.instance;
-            const tempV = new THREE.Vector3();
-            // get the position of the center of the cube
-            cube.updateWorldMatrix(true, false);
-            cube.getWorldPosition(tempV);
-            // get the normalized screen coordinate of that position
-            // x and y will be in the -1 to +1 range with x = -1 being
-            // on the left and y = -1 being on the bottom
-            tempV.project(camera);
-
-            // convert the normalized position to CSS coordinates
-            const x = (tempV.x * .5 + .5) * window.innerWidth;
-            const y = (tempV.y * -.5 + .5) * window.innerHeight;
-            // move the elem to that position
-            elem.style.transform = `translate(-50%, -50%) translate(${x}px,${y}px)`;
         });
 
     }
