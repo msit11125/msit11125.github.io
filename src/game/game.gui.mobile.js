@@ -17,6 +17,26 @@ function detectmob() {
 
 if (detectmob()) {
     $('#mobile-control').show();
+    $('#small-map').hide();
+    $('#Stats-output').hide();
+    $('.topBoard').css({
+        '-webkit-transform': 'scale(' + 0.5 + ')',
+        '-moz-transform': 'scale(' + 0.5 + ')',
+        '-ms-transform': 'scale(' + 0.5 + ')',
+        '-o-transform': 'scale(' + 0.5 + ')',
+        'transform': 'scale(' + 0.5 + ')',
+        'transform-origin': 'top right'
+    });
+
+    $('.plays-small').css({
+        '-webkit-transform': 'scale(' + 0.5 + ')',
+        '-moz-transform': 'scale(' + 0.5 + ')',
+        '-ms-transform': 'scale(' + 0.5 + ')',
+        '-o-transform': 'scale(' + 0.5 + ')',
+        'transform': 'scale(' + 0.5 + ')',
+        'transform-origin': 'top left'
+    });
+
 }
 
 
