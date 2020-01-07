@@ -8,7 +8,7 @@ body {
   background: black;
 }
 
-#container {
+#game {
   position: relative;
   /* makes this the origin of its children */
   width: 100vw;
@@ -21,7 +21,7 @@ body {
   top: 50%;
   left: 50%;
   z-index: 5000;
-  padding: 35vh 35vw !important;
+  padding: 35vh 35vw ;
   transform: translate(-50%, -50%);
   background: rgba(0, 0, 0, 0.6);
   width: 100%;

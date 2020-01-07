@@ -1,4 +1,4 @@
-var container = document.getElementById("container");
+var game = document.getElementById("game");
 
 var camera, scene, renderer; // 相機, 場景, 渲染器
 
@@ -207,7 +207,7 @@ function basicSceneInit() {
     stats = initStats();
 
 
-    container.appendChild(renderer.domElement);
+    game.appendChild(renderer.domElement);
     // render
     requestAnimationFrame(render);
 
