@@ -280,8 +280,9 @@ function GenerateGameLevel() {
         for (var i = 0; i < count; i++) {
             enemies[i] = createEnemy(i);
 
-            // 避免重疊玩家
-            while (enemies[i].position_default.x == player.position_default.x && enemies[i].position_default.z == player.position_default.z) {
+            // 避免重疊及離玩家太近
+            while ( Math.abs(enemies[i].position_default.x - player.position_default.x ) < 3
+                && Math.abs(enemies[i].position_default.z - player.position_default.z) < 3) {
                 enemies[i] = createEnemy(i); // 重新生成
             }
 
