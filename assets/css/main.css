@@ -21,7 +21,7 @@ body {
   top: 50%;
   left: 50%;
   z-index: 5000;
-  padding: 35vh 35vw ;
+  padding: 35vh 35vw;
   transform: translate(-50%, -50%);
   background: rgba(0, 0, 0, 0.6);
   width: 100%;
@@ -112,13 +112,37 @@ body {
   float: left;
   text-align: center;
   overflow: auto;
-  background: linear-gradient(270deg, #000000, #2b1d61);
+  background: linear-gradient(270deg, #000000, #292929);
   background-size: 400% 400%;
 
-  -webkit-animation: AnimationName 2s ease infinite;
-  -moz-animation: AnimationName 2s ease infinite;
-  animation: AnimationName 2s ease infinite;
+  -webkit-animation: AnimationName 4s ease infinite;
+  -moz-animation: AnimationName 4s ease infinite;
+  animation: AnimationName 4s ease infinite;
 
+}
+
+#face {
+  animation: face 8s linear infinite;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100px;
+}
+
+@keyframes face {
+  0% {
+    left: 0;
+  }
+
+ 
+  50% {
+    left: 90%;
+  }
+
+
+  100% {
+    left: 0;
+  }
 }
 
 #discription .content {

@@ -114,14 +114,14 @@ function basicSceneInit() {
         24000
     );
 
-    camera.position.set(0, 13, 7);
+    camera.position.set(0, 16, 7);
 
     // 渲染器設置
     renderer = new THREE.WebGLRenderer({
         antialias: false // 抗鋸齒
     });
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap ;
 
     renderer.setClearColor(new THREE.Color(0x00000, 1.0));
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -163,7 +163,7 @@ function basicSceneInit() {
             //transparent: true,
             //opacity: 1,
             map: texture,
-            color: 0xffffff,
+            color: 0xDEEAF7,
             side: THREE.SingleSide
         }),
     );
@@ -204,7 +204,7 @@ function basicSceneInit() {
     initEvents(camera, renderer);
 
     // stats 
-    stats = initStats();
+    //stats = initStats();
 
 
     game.appendChild(renderer.domElement);
@@ -228,6 +228,13 @@ var surviveBoard = $("#surviveBoard");
 
 // 開始遊戲
 startGameButton.click(function (e) {
+    if($("#difficultChoose").val() == null){
+        alert("尚未選擇難度!");
+        return;
+    }
+    $('.plays-small').show();
+    $('.plays-main').hide();
+
     if (nowGameStatus == GameStatus.Start) {
         gameActions(GameStatus.Pause);
     } else {
@@ -350,8 +357,8 @@ function GenerateGameLevel() {
             wallGeo = new THREE.BoxBufferGeometry(wallLen, boxSize, 0.01);
             wallMaterial = new THREE.MeshLambertMaterial({
                 map: texture,
-                side: THREE.DoubleSide
-                // color: 0x7D5A33
+                side: THREE.DoubleSide,
+                color: 0xffffff
             });
 
             let voxel = new THREE.Mesh(wallGeo, wallMaterial);
@@ -670,7 +677,7 @@ function render() {
     });
 
     // 更新其他
-    stats.update();
+    //stats.update();
     TWEEN.update();
 
 
